@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mevil's Exam Prep – ICAS & NAPLAN | Year 2 Casey Fields PS</title>
+<style>
+:root{--blue:#2563eb;--green:#16a34a;--orange:#ea580c;--purple:#7c3aed;--red:#dc2626;--teal:#0891b2;--bg:#f0f4ff;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+header h1{font-size:1.15rem;font-weight:700}header small{opacity:.75;font-size:.75rem;display:block}
+#hdr-right{text-align:right;font-size:.75rem;opacity:.9}
+.screen{display:none;padding:20px;max-width:880px;margin:0 auto;padding-bottom:80px}
+.screen.active{display:block}
+/* Resume banner */
+#resumeBanner{background:#fef9c3;border:2px solid #fbbf24;border-radius:12px;padding:14px 18px;margin-bottom:18px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#resumeBanner p{font-size:.9rem;font-weight:600;color:#92400e}
+#resumeBanner .btn-row{display:flex;gap:8px}
+/* Home */
+.typeGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.typeCard{background:var(--card);border-radius:14px;padding:22px;cursor:pointer;border:2px solid transparent;transition:.2s;box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center}
+.typeCard:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.typeCard.icas{border-color:var(--blue)}.typeCard.naplan{border-color:var(--green)}
+.typeCard .icon{font-size:2.2rem;margin-bottom:8px}.typeCard h3{font-size:1.05rem;font-weight:700}
+.typeCard p{font-size:.8rem;color:var(--muted);margin-top:4px}.typeCard .tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;color:#fff;margin-top:8px}
+.typeCard.icas .tag{background:var(--blue)}.typeCard.naplan .tag{background:var(--green)}
+/* Subject picker */
+.subGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.subCard{background:var(--card);border-radius:12px;padding:18px;cursor:pointer;border:2px solid var(--border);transition:.2s;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.subCard:hover{border-color:var(--blue);background:#eff6ff}
+.subCard.active{border-color:var(--blue);background:#eff6ff}
+.subCard .icon{font-size:1.8rem}.subCard h4{font-size:.9rem;font-weight:700;margin-top:6px}
+.subCard p{font-size:.75rem;color:var(--muted);margin-top:3px}
+/* Config */
+.cfgBox{background:var(--card);border-radius:14px;padding:24px;max-width:520px;margin:20px auto;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.cfgBox h2{font-size:1.1rem;margin-bottom:18px}
+.cfgRow{margin-bottom:15px}.cfgRow label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:7px 16px;border-radius:999px;border:2px solid var(--border);cursor:pointer;font-size:.85rem;font-weight:600;transition:.15s}
+.pill.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* Test */
+.tHdr{background:var(--card);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.tHdr .lbl{font-weight:700;font-size:.88rem;white-space:nowrap}
+.tHdr .prog{flex:1}
+.progBar{height:7px;background:var(--border);border-radius:999px;overflow:hidden}
+.progFill{height:100%;background:var(--blue);border-radius:999px;transition:width .3s}
+.tTimer{font-size:1.1rem;font-weight:700;color:var(--orange);min-width:56px;text-align:right}
+.tTimer.warn{color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.passageBox{background:#f8fafc;border-left:4px solid var(--blue);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:var(--text)}
+.passageBox strong{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:block;margin-bottom:6px}
+.qCard{background:var(--card);border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:18px}
+.qNum{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.qText{font-size:1rem;font-weight:600;line-height:1.6;margin-bottom:18px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{padding:12px 16px;border:2px solid var(--border);border-radius:10px;cursor:pointer;font-size:.93rem;display:flex;align-items:center;gap:10px;transition:.15s}
+.opt:hover:not(.locked){border-color:var(--blue);background:#eff6ff}
+.opt.sel{border-color:var(--blue);background:#eff6ff;font-weight:600}
+.opt.correct{border-color:var(--green);background:#f0fdf4}.opt.wrong{border-color:var(--red);background:#fef2f2}
+.opt .ltr{width:26px;height:26px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0}
+.opt.sel .ltr{background:var(--blue);color:#fff}.opt.correct .ltr{background:var(--green);color:#fff}.opt.wrong .ltr{background:var(--red);color:#fff}
+.fbMsg{margin-top:12px;padding:11px 14px;border-radius:8px;font-size:.88rem;font-weight:600;display:none}
+.fbMsg.ok{background:#f0fdf4;color:var(--green);display:block}.fbMsg.no{background:#fef2f2;color:var(--red);display:block}
+.expBox{background:#f8fafc;border-radius:7px;padding:11px;font-size:.83rem;color:var(--muted);margin-top:8px;line-height:1.5;display:none}
+.navRow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.qNav{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.qNav .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);cursor:pointer;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:.1s}
+.qNav .dot.ans{background:var(--blue);color:#fff;border-color:var(--blue)}
+.qNav .dot.curr{border-color:var(--orange);color:var(--orange)}
+/* Buttons */
+.btn{padding:11px 22px;border-radius:10px;border:none;cursor:pointer;font-size:.92rem;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:#1d4ed8}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{background:#15803d}
+.btn-s{background:var(--border);color:var(--text)}.btn-s:hover{background:#cbd5e1}
+.btn-r{background:var(--red);color:#fff}.btn-r:hover{background:#b91c1c}
+.btn-lg{padding:13px 28px;font-size:1rem}
+/* Results */
+.rCard{background:var(--card);border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:14px}
+.scoreRing{width:110px;height:110px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 16px;border:5px solid;font-weight:700}
+.scoreRing .pct{font-size:1.8rem}.scoreRing .grd{font-size:.8rem;opacity:.8}
+.bandBox{padding:14px;border-radius:10px;text-align:center;margin:12px 0}
+.skillBar{height:7px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:4px}
+.skillFill{height:100%;border-radius:999px}
+.skillGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.skillItem label{font-size:.8rem;font-weight:600;display:flex;justify-content:space-between;margin-bottom:3px}
+/* Dashboard */
+.dashStats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.sStat{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.sStat .val{font-size:1.8rem;font-weight:700}.sStat .lbl{font-size:.78rem;color:var(--muted)}
+.hTbl{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.hTbl th{background:#f1f5f9;padding:9px 12px;text-align:left;font-size:.78rem;color:var(--muted);font-weight:600}
+.hTbl td{padding:9px 12px;font-size:.85rem;border-top:1px solid var(--border)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+.badge.A{background:#dcfce7;color:#166534}.badge.B{background:#dbeafe;color:#1e40af}
+.badge.C{background:#fef9c3;color:#854d0e}.badge.D{background:#fee2e2;color:#991b1b}
+.insight{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:10px;padding:16px;border-left:4px solid var(--blue);margin-bottom:10px}
+.insight.warn{background:linear-gradient(135deg,#fff7ed,#fef9c3);border-left-color:var(--orange)}
+.insight.tip{background:linear-gradient(135deg,#f5f3ff,#eff6ff);border-left-color:var(--purple)}
+.insight h4{font-size:.88rem;font-weight:700;margin-bottom:5px}
+.insight p{font-size:.82rem;color:var(--muted);line-height:1.5}
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:999px;border:2px solid var(--border);cursor:pointer;font-size:.85rem;font-weight:600;transition:.15s}
+.tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* Bottom nav */
+nav.bot{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:7px 0;z-index:150}
+nav.bot button{background:none;border:none;cursor:pointer;padding:5px 12px;font-size:.73rem;color:var(--muted);font-weight:600;display:flex;flex-direction:column;align-items:center;gap:1px;transition:.15s}
+nav.bot button .ico{font-size:1.25rem}
+nav.bot button.on{color:var(--blue)}
+/* Section header */
+.secH{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.secH .back{background:none;border:none;cursor:pointer;font-size:1.2rem;padding:4px}
+.secH h2{font-size:1.15rem;font-weight:700}
+.divider{height:1px;background:var(--border);margin:16px 0}
+@media(max-width:580px){.typeGrid{grid-template-columns:1fr}.skillGrid{grid-template-columns:1fr}.subGrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🎓 Mevil's Exam Prep</h1><small>Year 2 · Casey Fields PS · Melbourne VIC</small></div>
+  <div id="hdr-right">ICAS &amp; NAPLAN<br><span style="font-size:.72rem">Victorian Curriculum</span></div>
+</header>
+
+<!-- ══ HOME ══ -->
+<div id="homeScreen" class="screen active">
+  <div id="resumeBanner">
+    <p id="resumeMsg">📝 You have an unfinished test. Resume where you left off?</p>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="resumeTest()">Resume</button>
+      <button class="btn btn-s" onclick="clearResume()">Discard</button>
+    </div>
+  </div>
+  <div style="margin-bottom:18px">
+    <h2 style="font-size:1.2rem">👋 Hi Mevil! What do you want to practise?</h2>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:4px">Choose ICAS or NAPLAN to begin. All questions follow the Victorian Curriculum Year 2.</p>
+  </div>
+  <div class="typeGrid">
+    <div class="typeCard icas" onclick="showSubjectPicker('icas')">
+      <div class="icon">🏆</div>
+      <h3>ICAS</h3>
+      <p>International Competitions & Assessments for Schools</p>
+      <span class="tag">4 Subjects · Year 2</span>
+    </div>
+    <div class="typeCard naplan" onclick="showSubjectPicker('naplan')">
+      <div class="icon">📋</div>
+      <h3>NAPLAN</h3>
+      <p>National Assessment Program – Literacy &amp; Numeracy</p>
+      <span class="tag">4 Sections · Warm-up</span>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:8px">
+    <button class="btn btn-s" onclick="goDash()">📊 View Progress Dashboard</button>
+  </div>
+</div>
+
+<!-- ══ SUBJECT PICKER ══ -->
+<div id="subjectScreen" class="screen">
+  <div class="secH">
+    <button class="back" onclick="showScreen('homeScreen')">←</button>
+    <h2 id="subjectTitle">Choose Subject</h2>
+  </div>
+  <div class="subGrid" id="subGrid"></div>
+  <div style="margin-top:18px">
+    <button class="btn btn-s" onclick="showScreen('homeScreen')">← Back</button>
+  </div>
+</div>
+
+<!-- ══ CONFIG ══ -->
+<div id="configScreen" class="screen">
+  <div class="cfgBox">
+    <div class="secH"><button class="back" onclick="showScreen('subjectScreen')">←</button><h2 id="cfgTitle">Test Settings</h2></div>
+    <div class="cfgRow">
+      <label>Mode</label>
+      <div class="pill-row" id="modePicker">
+        <div class="pill sel" data-v="exam" onclick="pickPill(this,'modePicker')">Exam (no hints)</div>
+        <div class="pill" data-v="practice" onclick="pickPill(this,'modePicker')">Practice (hints &amp; explanations)</div>
+      </div>
+    </div>
+    <div id="naplanTip" style="display:none;background:#f0fdf4;border-radius:8px;padding:12px;font-size:.83rem;color:var(--green);margin-bottom:14px">
+      ✅ <strong>Realistic NAPLAN format:</strong> This test mirrors the actual exam structure for Mevil's year level. Sections are timed separately.
+    </div>
+    <div id="icasTip" style="display:none;background:#eff6ff;border-radius:8px;padding:12px;font-size:.83rem;color:var(--blue);margin-bottom:14px">
+      ✅ <strong>Realistic ICAS format:</strong> This uses the official ICAS question count and timing for Year 2.
+    </div>
+    <div id="cfgDetails" style="background:#f8fafc;border-radius:8px;padding:12px;font-size:.83rem;margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-s" onclick="showScreen('subjectScreen')" style="flex:1">← Back</button>
+      <button class="btn btn-p btn-lg" onclick="startTest()" style="flex:2">Start Test 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TEST ══ -->
+<div id="testScreen" class="screen">
+  <div class="tHdr">
+    <div class="lbl" id="tLabel">ICAS Mathematics</div>
+    <div class="prog">
+      <div style="font-size:.73rem;color:var(--muted);margin-bottom:3px"><span id="tCurr">1</span>/<span id="tTot">30</span></div>
+      <div class="progBar"><div class="progFill" id="tProgFill" style="width:0%"></div></div>
+    </div>
+    <div class="tTimer" id="tTimer">--:--</div>
+  </div>
+  <div class="qNav" id="qNav"></div>
+  <div class="passageBox" id="passageBox" style="display:none">
+    <strong>Read the passage then answer the question:</strong>
+    <div id="passageText"></div>
+  </div>
+  <div class="qCard" id="qCard">
+    <div class="qNum" id="qNum">Question 1</div>
+    <div class="qText" id="qText"></div>
+    <div class="opts" id="opts"></div>
+    <div class="fbMsg" id="fbMsg"></div>
+    <div class="expBox" id="expBox"></div>
+  </div>
+  <div class="navRow">
+    <button class="btn btn-s" id="prevBtn" onclick="navigate(-1)">← Prev</button>
+    <button class="btn btn-s" onclick="quitTest()">Quit</button>
+    <button class="btn btn-p" id="nextBtn" onclick="navigate(1)">Next →</button>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div id="resultsScreen" class="screen">
+  <div class="rCard" id="rSummary"></div>
+  <div class="rCard" id="rSkills"></div>
+  <div class="rCard" id="rInsights"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+    <button class="btn btn-p btn-lg" onclick="retakeTest()">🔄 New Test (same subject)</button>
+    <button class="btn btn-s btn-lg" onclick="showScreen('homeScreen')">🏠 Home</button>
+    <button class="btn btn-s btn-lg" onclick="goDash()">📊 Dashboard</button>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="dashScreen" class="screen">
+  <div class="secH"><button class="back" onclick="showScreen('homeScreen')">←</button><h2>📊 Progress Dashboard</h2></div>
+  <div class="dashStats" id="dashStats"></div>
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab('tOverview',this)">Overview</div>
+    <div class="tab" onclick="switchTab('tHistory',this)">History</div>
+    <div class="tab" onclick="switchTab('tInsights',this)">Insights</div>
+  </div>
+  <div id="tOverview"></div>
+  <div id="tHistory" style="display:none"></div>
+  <div id="tInsights" style="display:none"></div>
+</div>
+
+<nav class="bot">
+  <button onclick="showScreen('homeScreen')" id="nav-home" class="on"><span class="ico">🏠</span>Home</button>
+  <button onclick="goDash()" id="nav-dash"><span class="ico">📊</span>Progress</button>
+</nav>
+
+<script src="questions_p1.js"></script>
+<script src="questions_p2.js"></script>
+<script src="questions_p3.js"></script>
+<script src="questions_p4.js"></script>
+<script>
+// ═══════════════════════════════
+//  CONFIGS
+// ═══════════════════════════════
+const CFGS = {
+  icas_maths:   {name:'🔢 ICAS Mathematics',   short:'ICAS Maths',    qCount:30, time:60, type:'icas'},
+  icas_english: {name:'📖 ICAS English',        short:'ICAS English',  qCount:35, time:65, type:'icas'},
+  icas_science: {name:'🔬 ICAS Science',        short:'ICAS Science',  qCount:25, time:50, type:'icas'},
+  icas_digital: {name:'💻 ICAS Digital Tech',   short:'ICAS Digital',  qCount:30, time:50, type:'icas'},
+  naplan_num:   {name:'🔢 NAPLAN Numeracy',     short:'Numeracy',      qCount:32, time:45, type:'naplan'},
+  naplan_read:  {name:'📖 NAPLAN Reading',      short:'Reading',       qCount:40, time:65, type:'naplan'},
+  naplan_spell: {name:'✏️ NAPLAN Spelling',     short:'Spelling',      qCount:20, time:45, type:'naplan'},
+  naplan_gram:  {name:'📝 NAPLAN Grammar',      short:'Grammar & Punc',qCount:20, time:45, type:'naplan'}
+};
+
+const ICAS_SUBJECTS = [
+  {key:'icas_maths',  icon:'🔢', label:'Mathematics', desc:'Number, measurement, geometry, data'},
+  {key:'icas_english',icon:'📖', label:'English',      desc:'Reading, grammar, spelling, vocab'},
+  {key:'icas_science',icon:'🔬', label:'Science',      desc:'Living things, materials, Earth, forces'},
+  {key:'icas_digital',icon:'💻', label:'Digital Tech', desc:'Devices, algorithms, data, online safety'}
+];
+const NAPLAN_SUBJECTS = [
+  {key:'naplan_num',  icon:'🔢', label:'Numeracy',        desc:'32 questions · 45 minutes'},
+  {key:'naplan_read', icon:'📖', label:'Reading',          desc:'40 questions · 65 minutes'},
+  {key:'naplan_spell',icon:'✏️', label:'Spelling',         desc:'20 questions · 45 minutes'},
+  {key:'naplan_gram', icon:'📝', label:'Grammar & Punc',   desc:'20 questions · 45 minutes'}
+];
+
+// ═══════════════════════════════
+//  STATE
+// ═══════════════════════════════
+let S = {
+  examType: null, subjectKey: null, cfg: null, mode: 'exam',
+  questions: [], answers: [], current: 0,
+  timer: null, timeLeft: 0, startTime: 0,
+  history: JSON.parse(localStorage.getItem('mv_hist') || '[]'),
+  usedQ: JSON.parse(localStorage.getItem('mv_usedQ') || '{}')
+};
+
+// ═══════════════════════════════
+//  SCREEN NAV
+// ═══════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav.bot button').forEach(b => b.classList.remove('on'));
+  if(id==='homeScreen') document.getElementById('nav-home').classList.add('on');
+  if(id==='dashScreen') document.getElementById('nav-dash').classList.add('on');
+  window.scrollTo(0,0);
+  if(id==='homeScreen') checkResume();
+}
+function goDash() { showScreen('dashScreen'); renderDash(); }
+
+// ═══════════════════════════════
+//  AUTO-SAVE / RESUME
+// ═══════════════════════════════
+function autoSave() {
+  localStorage.setItem('mv_progress', JSON.stringify({
+    subjectKey: S.subjectKey, mode: S.mode, cfg: S.cfg,
+    questions: S.questions.map(q => q.id),
+    answers: S.answers, current: S.current,
+    timeLeft: S.timeLeft, startTime: S.startTime
+  }));
+}
+function clearResume() {
+  localStorage.removeItem('mv_progress');
+  document.getElementById('resumeBanner').style.display = 'none';
+}
+function checkResume() {
+  const p = localStorage.getItem('mv_progress');
+  if (!p) return;
+  const d = JSON.parse(p);
+  const cfgName = CFGS[d.subjectKey]?.short || d.subjectKey;
+  const answered = d.answers.filter(a => a !== null).length;
+  document.getElementById('resumeMsg').textContent =
+    `📝 Unfinished ${cfgName} test — ${answered} of ${d.questions.length} answered. Resume?`;
+  document.getElementById('resumeBanner').style.display = 'flex';
+}
+function resumeTest() {
+  const p = localStorage.getItem('mv_progress');
+  if (!p) return;
+  const d = JSON.parse(p);
+  S.subjectKey = d.subjectKey;
+  S.mode = d.mode;
+  S.cfg = d.cfg || CFGS[d.subjectKey];
+  const bank = getBank(d.subjectKey);
+  S.questions = d.questions.map(id => bank.find(q => q.id === id)).filter(Boolean);
+  if (S.questions.length < d.questions.length) { clearResume(); alert('Saved test data mismatch. Please start a new test.'); return; }
+  S.answers = d.answers;
+  S.current = d.current;
+  S.timeLeft = d.timeLeft;
+  S.startTime = d.startTime;
+  document.getElementById('resumeBanner').style.display = 'none';
+  showScreen('testScreen');
+  renderTestUI();
+  if (S.timeLeft > 0) startTimerFrom(S.timeLeft);
+}
+
+// ═══════════════════════════════
+//  SUBJECT PICKER
+// ═══════════════════════════════
+function showSubjectPicker(type) {
+  S.examType = type;
+  document.getElementById('subjectTitle').textContent = type === 'icas' ? '🏆 ICAS – Choose Subject' : '📋 NAPLAN – Choose Section';
+  const subs = type === 'icas' ? ICAS_SUBJECTS : NAPLAN_SUBJECTS;
+  document.getElementById('subGrid').innerHTML = subs.map(s =>
+    `<div class="subCard" onclick="openConfig('${s.key}')">
+      <div class="icon">${s.icon}</div>
+      <h4>${s.label}</h4>
+      <p>${s.desc}</p>
+    </div>`).join('');
+  showScreen('subjectScreen');
+}
+
+// ═══════════════════════════════
+//  CONFIG
+// ═══════════════════════════════
+function openConfig(key) {
+  S.subjectKey = key;
+  S.cfg = CFGS[key];
+  document.getElementById('cfgTitle').textContent = S.cfg.name;
+  document.getElementById('naplanTip').style.display = S.cfg.type==='naplan'?'block':'none';
+  document.getElementById('icasTip').style.display = S.cfg.type==='icas'?'block':'none';
+  const bank = getBank(key);
+  const used = (S.usedQ[key] || []).length;
+  const fresh = bank.length - used;
+  document.getElementById('cfgDetails').innerHTML =
+    `<strong>📌 ${S.cfg.name}</strong><br>` +
+    `Questions per test: <strong>${S.cfg.qCount}</strong> · Time limit: <strong>${S.cfg.time} minutes</strong><br>` +
+    `Question bank: <strong>${bank.length} total</strong> · Unseen questions available: <strong>${fresh >= S.cfg.qCount ? fresh : bank.length} </strong>` +
+    `<span style="font-size:.75rem;color:var(--muted)"> (bank resets after all questions seen)</span>`;
+  showScreen('configScreen');
+}
+function pickPill(el, groupId) {
+  document.querySelectorAll(`#${groupId} .pill`).forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function getPill(groupId) {
+  return document.querySelector(`#${groupId} .pill.sel`)?.dataset.v || null;
+}
+
+// ═══════════════════════════════
+//  SMART QUESTION ENGINE
+// ═══════════════════════════════
+function getBank(key) { return window.QB[key] || []; }
+
+function pickQuestions(key, count) {
+  const bank = getBank(key);
+  if (!S.usedQ[key]) S.usedQ[key] = [];
+  let used = S.usedQ[key];
+  let avail = bank.filter(q => !used.includes(q.id));
+  // If not enough unseen, reset bank
+  if (avail.length < count) { S.usedQ[key] = []; used = []; avail = [...bank]; }
+  // Shuffle available
+  const shuffled = [...avail].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, count);
+  // Mark as used
+  S.usedQ[key] = [...used, ...picked.map(q => q.id)];
+  localStorage.setItem('mv_usedQ', JSON.stringify(S.usedQ));
+  return picked;
+}
+
+// ═══════════════════════════════
+//  START TEST
+// ═══════════════════════════════
+function startTest() {
+  S.mode = getPill('modePicker') || 'exam';
+  S.questions = pickQuestions(S.subjectKey, S.cfg.qCount);
+  S.answers = new Array(S.cfg.qCount).fill(null);
+  S.current = 0;
+  S.startTime = Date.now();
+  S.timeLeft = S.cfg.time * 60;
+  showScreen('testScreen');
+  renderTestUI();
+  startTimerFrom(S.timeLeft);
+  autoSave();
+}
+
+function startTimerFrom(secs) {
+  clearInterval(S.timer);
+  S.timeLeft = secs;
+  updateTimer();
+  S.timer = setInterval(() => {
+    S.timeLeft--;
+    updateTimer();
+    autoSave();
+    if (S.timeLeft <= 0) { clearInterval(S.timer); submitTest(); }
+  }, 1000);
+}
+
+function updateTimer() {
+  if (!S.cfg) return;
+  if (S.cfg.time === 0) { document.getElementById('tTimer').textContent = '∞'; return; }
+  const m = Math.floor(S.timeLeft/60), sc = S.timeLeft%60;
+  const el = document.getElementById('tTimer');
+  el.textContent = `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+  el.classList.toggle('warn', S.timeLeft < 60);
+}
+
+// ═══════════════════════════════
+//  RENDER TEST
+// ═══════════════════════════════
+function renderTestUI() {
+  document.getElementById('tLabel').textContent = S.cfg.name;
+  document.getElementById('tTot').textContent = S.cfg.qCount;
+  renderQNav();
+  renderQuestion();
+}
+
+function renderQNav() {
+  document.getElementById('qNav').innerHTML = S.questions.map((q,i) => {
+    let cls = 'dot';
+    if (S.answers[i] !== null) cls += ' ans';
+    if (i === S.current) cls += ' curr';
+    return `<div class="${cls}" onclick="jumpTo(${i})" title="Q${i+1}">${i+1}</div>`;
+  }).join('');
+}
+
+function renderQuestion() {
+  const q = S.questions[S.current];
+  const idx = S.current;
+  document.getElementById('qNum').textContent = `Question ${idx+1} of ${S.cfg.qCount}`;
+  document.getElementById('tCurr').textContent = idx+1;
+  document.getElementById('tProgFill').style.width = `${(idx/S.cfg.qCount)*100}%`;
+
+  // Passage
+  const pBox = document.getElementById('passageBox');
+  const pText = document.getElementById('passageText');
+  if (q.p) { pBox.style.display='block'; pText.textContent = q.p; }
+  else { pBox.style.display='none'; }
+
+  document.getElementById('qText').textContent = q.q;
+
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  const LTRS = ['A','B','C','D'];
+  q.o.forEach((opt, i) => {
+    const answered = S.answers[idx] !== null;
+    const isSel = S.answers[idx] === i;
+    const isCorrect = q.a === i;
+    let cls = 'opt';
+    if (answered && S.mode === 'practice') {
+      cls += isCorrect ? ' correct' : (isSel ? ' wrong' : '');
+    } else if (isSel) cls += ' sel';
+    if (answered && S.mode === 'exam') cls += ' locked';
+    opts.innerHTML += `<div class="${cls}" onclick="selectAns(${i})">
+      <div class="ltr">${LTRS[i]}</div><div>${opt}</div></div>`;
+  });
+
+  // Feedback
+  const fb = document.getElementById('fbMsg');
+  const exp = document.getElementById('expBox');
+  fb.className = 'fbMsg'; fb.style.display = 'none';
+  exp.style.display = 'none';
+  if (S.answers[idx] !== null && S.mode === 'practice') {
+    const ok = S.answers[idx] === q.a;
+    fb.className = `fbMsg ${ok ? 'ok' : 'no'}`;
+    fb.textContent = ok ? '✅ Correct! Well done, Mevil!' : `❌ The correct answer is ${LTRS[q.a]}.`;
+    if (q.e) { exp.textContent = '💡 ' + q.e; exp.style.display = 'block'; }
+  }
+
+  document.getElementById('prevBtn').disabled = idx === 0;
+  const last = idx === S.cfg.qCount-1;
+  const nb = document.getElementById('nextBtn');
+  nb.textContent = last ? '✔ Submit Test' : 'Next →';
+  nb.onclick = last ? submitTest : () => navigate(1);
+  renderQNav();
+}
+
+function selectAns(i) {
+  if (S.mode === 'exam' && S.answers[S.current] !== null) return;
+  S.answers[S.current] = i;
+  autoSave();
+  renderQuestion();
+}
+
+function navigate(dir) {
+  const n = S.current + dir;
+  if (n < 0 || n >= S.cfg.qCount) return;
+  S.current = n;
+  renderQuestion();
+}
+
+function jumpTo(i) { S.current = i; renderQuestion(); }
+
+function quitTest() {
+  if (confirm('Quit this test? Your answers have been auto-saved — you can resume later from the home screen.')) {
+    clearInterval(S.timer);
+    showScreen('homeScreen');
+  }
+}
+
+// ═══════════════════════════════
+//  SUBMIT & RESULTS
+// ═══════════════════════════════
+function submitTest() {
+  clearInterval(S.timer);
+  clearResume();
+  const qs = S.questions;
+  let correct = 0;
+  const topics = {};
+  qs.forEach((q, i) => {
+    const ok = S.answers[i] === q.a;
+    if (ok) correct++;
+    const t = q.t || 'General';
+    if (!topics[t]) topics[t] = {c:0,n:0};
+    topics[t].n++;
+    if (ok) topics[t].c++;
+  });
+  const pct = Math.round((correct / S.cfg.qCount) * 100);
+  const grade = pct>=85?'A':pct>=70?'B':pct>=55?'C':'D';
+  const time = Math.round((Date.now() - S.startTime) / 1000);
+  const band = getIcasBand(pct, S.subjectKey);
+
+  const entry = {
+    date: new Date().toLocaleDateString('en-AU'),
+    ts: Date.now(),
+    key: S.subjectKey,
+    name: S.cfg.short,
+    type: S.cfg.type,
+    score: correct, total: S.cfg.qCount, pct, grade, band, time, topics
+  };
+  S.history.unshift(entry);
+  if (S.history.length > 80) S.history.pop();
+  localStorage.setItem('mv_hist', JSON.stringify(S.history));
+  renderResults(entry, qs);
+  showScreen('resultsScreen');
+}
+
+function getIcasBand(pct, key) {
+  if (S.cfg.type === 'naplan') {
+    if (pct>=95) return 'Band 6'; if (pct>=85) return 'Band 5'; if (pct>=70) return 'Band 4';
+    if (pct>=55) return 'Band 3'; if (pct>=40) return 'Band 2'; return 'Band 1';
+  }
+  if (pct>=95) return 'High Distinction'; if (pct>=85) return 'Distinction';
+  if (pct>=65) return 'Credit'; if (pct>=50) return 'Merit'; return 'Participation';
+}
+
+function renderResults(entry, qs) {
+  const gc = {A:'#16a34a',B:'#2563eb',C:'#d97706',D:'#dc2626'};
+  const gm = {A:'Outstanding! 🌟',B:'Great job! 👍',C:'Keep going! 💪',D:'More practice needed 🎯'};
+  const timeTxt = `${Math.floor(entry.time/60)}m ${entry.time%60}s`;
+
+  document.getElementById('rSummary').innerHTML = `
+    <h2 style="margin-bottom:16px">📋 Test Results – ${entry.name}</h2>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div class="scoreRing" style="color:${gc[entry.grade]};border-color:${gc[entry.grade]}">
+        <div class="pct">${entry.pct}%</div><div class="grd">Grade ${entry.grade}</div>
+      </div>
+      <div>
+        <p style="font-size:1.1rem;font-weight:700;color:${gc[entry.grade]}">${gm[entry.grade]}</p>
+        <p style="margin-top:6px;color:var(--muted)"><strong>${entry.score}/${entry.total}</strong> correct</p>
+        <div class="bandBox" style="background:${gc[entry.grade]}18;color:${gc[entry.grade]}">
+          <strong>${entry.band}</strong>
+        </div>
+        <p style="font-size:.8rem;color:var(--muted)">Time: ${timeTxt} · ${entry.date}</p>
+      </div>
+    </div>
+    <div style="margin-top:14px;background:#f8fafc;border-radius:8px;padding:12px;font-size:.82rem;color:var(--muted)">
+      ${qs.map((q,i) => {
+        const ok = entry.topics; // just indicator
+        const c = S.answers[i] === q.a;
+        return `<span style="color:${c?'var(--green)':'var(--red)'};margin-right:4px">${c?'✓':'✗'}</span>`;
+      }).join('')}
+      &nbsp;(✓ correct · ✗ incorrect)
+    </div>`;
+
+  const cols = {A:'#16a34a',B:'#2563eb',C:'#d97706',D:'#dc2626'};
+  let sk = '<h3 style="margin-bottom:14px">📚 Topic Breakdown</h3><div class="skillGrid">';
+  Object.entries(entry.topics).forEach(([t,v]) => {
+    const tp = Math.round((v.c/v.n)*100);
+    const co = tp>=85?cols.A:tp>=70?cols.B:tp>=55?cols.C:cols.D;
+    sk += `<div class="skillItem"><label><span>${t}</span><span style="color:${co}">${v.c}/${v.n}</span></label>
+      <div class="skillBar"><div class="skillFill" style="width:${tp}%;background:${co}"></div></div></div>`;
+  });
+  sk += '</div>';
+  document.getElementById('rSkills').innerHTML = sk;
+
+  const weak = Object.entries(entry.topics).filter(([,v])=>v.c/v.n<0.6).map(([k])=>k);
+  const strong = Object.entries(entry.topics).filter(([,v])=>v.c/v.n>=0.85).map(([k])=>k);
+  const examTip = S.cfg.type === 'naplan'
+    ? `NAPLAN warmup score ${entry.pct}% → ${entry.pct>=70?'On track for Year 3 NAPLAN 🎉':'Build these skills before Year 3 NAPLAN.'}`
+    : `ICAS result ${entry.pct}% → ${entry.pct>=85?'Distinction territory! 🏆':entry.pct>=65?'Credit/Distinction range – keep pushing!':'Good start – consistent practice will lift this score.'}`;
+
+  document.getElementById('rInsights').innerHTML = `
+    <h3 style="margin-bottom:12px">💡 Personalised Insights</h3>
+    ${strong.length ? `<div class="insight"><h4>🌟 Strengths</h4><p>${strong.join(' · ')}</p></div>` : ''}
+    ${weak.length ? `<div class="insight warn"><h4>📌 Focus Areas</h4><p>${weak.join(' · ')}</p><p style="margin-top:4px">Tip: Switch to <strong>Practice mode</strong> and do a targeted test on these topics to see hints and explanations.</p></div>` : ''}
+    <div class="insight tip"><h4>🎯 ${S.cfg.type==='icas'?'ICAS':'NAPLAN'} Readiness</h4><p>${examTip}</p></div>
+    <div class="insight tip"><h4>📅 Study Plan</h4><p>Aim for <strong>1 test per day</strong>, 15–20 minutes. Your question bank rotates automatically — every test feels different until all ${getBank(S.subjectKey).length} questions have been seen.</p></div>`;
+}
+
+function retakeTest() { openConfig(S.subjectKey); }
+
+// ═══════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════
+function renderDash() {
+  const h = S.history;
+  const total = h.length;
+  const avg = total ? Math.round(h.reduce((a,b)=>a+b.pct,0)/total) : 0;
+  const best = total ? Math.max(...h.map(e=>e.pct)) : 0;
+  const streak = calcStreak();
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="sStat"><div class="val" style="color:var(--blue)">${total}</div><div class="lbl">Tests Done</div></div>
+    <div class="sStat"><div class="val" style="color:var(--green)">${avg}%</div><div class="lbl">Avg Score</div></div>
+    <div class="sStat"><div class="val" style="color:var(--orange)">${best}%</div><div class="lbl">Personal Best</div></div>
+    <div class="sStat"><div class="val" style="color:var(--purple)">${streak}</div><div class="lbl">Day Streak 🔥</div></div>`;
+
+  renderDashOverview();
+  renderDashHistory();
+  renderDashInsights();
+}
+
+function calcStreak() {
+  if (!S.history.length) return 0;
+  const days = [...new Set(S.history.map(e => e.date))];
+  let streak = 1;
+  for (let i=1; i<days.length; i++) {
+    const a = new Date(days[i-1].split('/').reverse().join('-'));
+    const b = new Date(days[i].split('/').reverse().join('-'));
+    if ((a-b) === 86400000) streak++; else break;
+  }
+  return streak;
+}
+
+function renderDashOverview() {
+  const h = S.history;
+  if (!h.length) { document.getElementById('tOverview').innerHTML='<div class="insight"><p>No tests yet. Start practising to see your progress! 🚀</p></div>'; return; }
+  const byKey = {};
+  h.forEach(e => {
+    if (!byKey[e.key]) byKey[e.key] = [];
+    byKey[e.key].push(e.pct);
+  });
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">';
+  Object.entries(CFGS).forEach(([k,c]) => {
+    const scores = byKey[k] || [];
+    const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
+    const col = avg===null?'var(--muted)':avg>=85?'var(--green)':avg>=70?'var(--blue)':avg>=55?'var(--orange)':'var(--red)';
+    html += `<div class="sStat">
+      <div style="font-size:.82rem;font-weight:700;margin-bottom:6px">${c.name}</div>
+      <div class="val" style="color:${col};font-size:1.5rem">${avg!==null?avg+'%':'—'}</div>
+      <div class="lbl">${scores.length} test${scores.length!==1?'s':''} · latest: ${scores.length?scores[0]+'%':'—'}</div>
+      ${avg!==null?`<div class="skillBar" style="margin-top:6px"><div class="skillFill" style="width:${avg}%;background:${col}"></div></div>`:''}
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('tOverview').innerHTML = html;
+}
+
+function renderDashHistory() {
+  const h = S.history;
+  if (!h.length) { document.getElementById('tHistory').innerHTML='<p style="color:var(--muted)">No history yet.</p>'; return; }
+  document.getElementById('tHistory').innerHTML = `
+    <table class="hTbl">
+      <thead><tr><th>Date</th><th>Test</th><th>Score</th><th>%</th><th>Grade</th><th>Band</th></tr></thead>
+      <tbody>${h.slice(0,30).map(e=>`
+        <tr><td>${e.date}</td><td>${e.name}</td><td>${e.score}/${e.total}</td><td>${e.pct}%</td>
+        <td><span class="badge ${e.grade}">${e.grade}</span></td><td style="font-size:.78rem">${e.band||'—'}</td></tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderDashInsights() {
+  const h = S.history;
+  if (!h.length) { document.getElementById('tInsights').innerHTML='<div class="insight"><p>Complete tests to see insights!</p></div>'; return; }
+  const allT = {};
+  h.forEach(e => Object.entries(e.topics).forEach(([t,v]) => {
+    if (!allT[t]) allT[t]={c:0,n:0};
+    allT[t].c+=v.c; allT[t].n+=v.n;
+  }));
+  const weak = Object.entries(allT).filter(([,v])=>v.c/v.n<0.55).map(([k])=>k);
+  const strong = Object.entries(allT).filter(([,v])=>v.c/v.n>=0.85).map(([k])=>k);
+  const avg = Math.round(h.reduce((a,b)=>a+b.pct,0)/h.length);
+  document.getElementById('tInsights').innerHTML = `
+    <div class="insight"><h4>📈 Overall Progress</h4><p>Average across all tests: <strong>${avg}%</strong>. ${avg>=70?'Mevil is performing well above expected Year 2 benchmarks! 🎉':'Regular daily practice will lift this score.'}</p></div>
+    ${strong.length?`<div class="insight"><h4>🌟 Consistent Strengths</h4><p>${strong.join(' · ')}</p></div>`:''}
+    ${weak.length?`<div class="insight warn"><h4>📌 Needs More Practice</h4><p>${weak.join(' · ')}</p></div>`:''}
+    <div class="insight tip"><h4>🏫 Victorian Curriculum Alignment</h4><p>All questions are mapped to VCAA Year 2 content descriptions for Casey Fields PS. ICAS Digital Technology uses Year 3 content to build ahead.</p></div>
+    <div class="insight tip"><h4>💡 Tips for Mevil</h4><p>• <strong>Exam mode</strong> = real ICAS/NAPLAN feel — no hints<br>• <strong>Practice mode</strong> = instant feedback + explanations after each answer<br>• Questions never repeat until all ${Object.values(window.QB).reduce((a,b)=>a+b.length,0)} in the bank are seen</p></div>`;
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  ['tOverview','tHistory','tInsights'].forEach(t => document.getElementById(t).style.display=t===id?'block':'none');
+}
+
+// Init
+checkResume();
+</script>
+</body>
+</html>
