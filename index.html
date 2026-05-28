@@ -519,7 +519,7 @@ function renderQuestion() {
     if (answered && S.mode === 'practice') {
       cls += isCorrect ? ' correct' : (isSel ? ' wrong' : '');
     } else if (isSel) cls += ' sel';
-    if (answered) cls += ' locked';
+    if (answered && S.mode === 'practice') cls += ' locked';
     opts.innerHTML += `<div class="${cls}" onclick="selectAns(${i})">
       <div class="ltr">${LTRS[i]}</div><div>${opt}</div></div>`;
   });
@@ -545,7 +545,8 @@ function renderQuestion() {
 }
 
 function selectAns(i) {
-  if (S.answers[S.current] !== null) return; // locked after first answer in ALL modes
+  if (S.mode === 'practice' && S.answers[S.current] !== null) return; // practice: lock after first answer
+  // exam mode: freely changeable until Submit
   S.answers[S.current] = i;
   autoSave();
   renderQuestion();
