@@ -102,6 +102,23 @@ header h1{font-size:1.15rem;font-weight:700}header small{opacity:.75;font-size:.
 .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
 .tab{padding:7px 16px;border-radius:999px;border:2px solid var(--border);cursor:pointer;font-size:.85rem;font-weight:600;transition:.15s}
 .tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* Review wrong answers */
+.revItem{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.revItem .rev-topic{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.revItem .rev-q{font-weight:600;font-size:.93rem;margin-bottom:10px;line-height:1.5}
+.revItem .rev-passage{background:#f8fafc;border-left:3px solid var(--blue);padding:8px 12px;border-radius:6px;font-size:.8rem;margin-bottom:8px;color:var(--muted);line-height:1.5}
+.revItem .rev-wrong{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:.87rem}
+.revItem .rev-right{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:.87rem}
+.revItem .rev-why{background:#f5f3ff;border-radius:8px;padding:10px 12px;font-size:.85rem;color:var(--purple);line-height:1.5}
+.revItem .rev-skip{background:#fef9c3;border:1px solid #fbbf24;border-radius:8px;padding:9px 12px;font-size:.87rem;color:#92400e}
+/* Topic trend */
+.trendUp{color:var(--green);font-weight:700} .trendDn{color:var(--red);font-weight:700} .trendFlat{color:var(--muted)}
+.focusCard{background:var(--card);border-radius:12px;padding:16px;border-left:5px solid var(--orange);margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.focusCard h4{font-size:.88rem;font-weight:700;margin-bottom:4px}
+.focusCard p{font-size:.82rem;color:var(--muted);line-height:1.5}
+.focusCard .trend-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.focusCard .tpill{padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:600;background:#fff7ed;color:var(--orange);border:1px solid #fed7aa}
+.focusCard.ok{border-left-color:var(--green)} .focusCard.ok .tpill{background:#f0fdf4;color:var(--green);border-color:#86efac}
 /* Bottom nav */
 nav.bot{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:7px 0;z-index:150}
 nav.bot button{background:none;border:none;cursor:pointer;padding:5px 12px;font-size:.73rem;color:var(--muted);font-weight:600;display:flex;flex-direction:column;align-items:center;gap:1px;transition:.15s}
@@ -224,6 +241,7 @@ nav.bot button.on{color:var(--blue)}
   <div class="rCard" id="rSummary"></div>
   <div class="rCard" id="rSkills"></div>
   <div class="rCard" id="rInsights"></div>
+  <div class="rCard" id="rReview"></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
     <button class="btn btn-p btn-lg" onclick="retakeTest()">🔄 New Test (same subject)</button>
     <button class="btn btn-s btn-lg" onclick="showScreen('homeScreen')">🏠 Home</button>
@@ -239,10 +257,12 @@ nav.bot button.on{color:var(--blue)}
     <div class="tab on" onclick="switchTab('tOverview',this)">Overview</div>
     <div class="tab" onclick="switchTab('tHistory',this)">History</div>
     <div class="tab" onclick="switchTab('tInsights',this)">Insights</div>
+  <div class="tab" onclick="switchTab('tFocus',this)">📌 Focus Areas</div>
   </div>
   <div id="tOverview"></div>
   <div id="tHistory" style="display:none"></div>
   <div id="tInsights" style="display:none"></div>
+  <div id="tFocus" style="display:none"></div>
 </div>
 
 <nav class="bot">
@@ -290,7 +310,8 @@ let S = {
   questions: [], answers: [], current: 0,
   timer: null, timeLeft: 0, startTime: 0,
   history: JSON.parse(localStorage.getItem('mv_hist') || '[]'),
-  usedQ: JSON.parse(localStorage.getItem('mv_usedQ') || '{}')
+  usedQ: JSON.parse(localStorage.getItem('mv_usedQ') || '{}'),
+  topicStats: JSON.parse(localStorage.getItem('mv_topicStats') || '{}')
 };
 
 // ═══════════════════════════════
@@ -498,7 +519,7 @@ function renderQuestion() {
     if (answered && S.mode === 'practice') {
       cls += isCorrect ? ' correct' : (isSel ? ' wrong' : '');
     } else if (isSel) cls += ' sel';
-    if (answered && S.mode === 'exam') cls += ' locked';
+    if (answered) cls += ' locked';
     opts.innerHTML += `<div class="${cls}" onclick="selectAns(${i})">
       <div class="ltr">${LTRS[i]}</div><div>${opt}</div></div>`;
   });
@@ -524,7 +545,7 @@ function renderQuestion() {
 }
 
 function selectAns(i) {
-  if (S.mode === 'exam' && S.answers[S.current] !== null) return;
+  if (S.answers[S.current] !== null) return; // locked after first answer in ALL modes
   S.answers[S.current] = i;
   autoSave();
   renderQuestion();
@@ -579,6 +600,7 @@ function submitTest() {
   S.history.unshift(entry);
   if (S.history.length > 80) S.history.pop();
   localStorage.setItem('mv_hist', JSON.stringify(S.history));
+  updateTopicStats(entry.topics, entry.date);
   renderResults(entry, qs);
   showScreen('resultsScreen');
 }
@@ -595,8 +617,10 @@ function getIcasBand(pct, key) {
 function renderResults(entry, qs) {
   const gc = {A:'#16a34a',B:'#2563eb',C:'#d97706',D:'#dc2626'};
   const gm = {A:'Outstanding! 🌟',B:'Great job! 👍',C:'Keep going! 💪',D:'More practice needed 🎯'};
+  const LTRS = ['A','B','C','D'];
   const timeTxt = `${Math.floor(entry.time/60)}m ${entry.time%60}s`;
 
+  // ── Summary card ──
   document.getElementById('rSummary').innerHTML = `
     <h2 style="margin-bottom:16px">📋 Test Results – ${entry.name}</h2>
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
@@ -605,48 +629,109 @@ function renderResults(entry, qs) {
       </div>
       <div>
         <p style="font-size:1.1rem;font-weight:700;color:${gc[entry.grade]}">${gm[entry.grade]}</p>
-        <p style="margin-top:6px;color:var(--muted)"><strong>${entry.score}/${entry.total}</strong> correct</p>
+        <p style="margin-top:6px;color:var(--muted)"><strong>${entry.score}/${entry.total}</strong> correct · ${entry.total - entry.score} to review</p>
         <div class="bandBox" style="background:${gc[entry.grade]}18;color:${gc[entry.grade]}">
           <strong>${entry.band}</strong>
         </div>
         <p style="font-size:.8rem;color:var(--muted)">Time: ${timeTxt} · ${entry.date}</p>
       </div>
     </div>
-    <div style="margin-top:14px;background:#f8fafc;border-radius:8px;padding:12px;font-size:.82rem;color:var(--muted)">
+    <div style="margin-top:14px;background:#f8fafc;border-radius:8px;padding:12px;font-size:.82rem;color:var(--muted);line-height:2">
       ${qs.map((q,i) => {
-        const ok = entry.topics; // just indicator
         const c = S.answers[i] === q.a;
-        return `<span style="color:${c?'var(--green)':'var(--red)'};margin-right:4px">${c?'✓':'✗'}</span>`;
+        return `<span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${c?'#dcfce7':'#fee2e2'};color:${c?'var(--green)':'var(--red)'};font-size:.72rem;font-weight:700;text-align:center;line-height:22px;margin:1px" title="Q${i+1}: ${c?'Correct':'Wrong'}">${c?'✓':'✗'}</span>`;
       }).join('')}
-      &nbsp;(✓ correct · ✗ incorrect)
+      <span style="margin-left:6px">&nbsp;(✓ correct · ✗ incorrect)</span>
     </div>`;
 
+  // ── Topic breakdown ──
   const cols = {A:'#16a34a',B:'#2563eb',C:'#d97706',D:'#dc2626'};
   let sk = '<h3 style="margin-bottom:14px">📚 Topic Breakdown</h3><div class="skillGrid">';
   Object.entries(entry.topics).forEach(([t,v]) => {
     const tp = Math.round((v.c/v.n)*100);
     const co = tp>=85?cols.A:tp>=70?cols.B:tp>=55?cols.C:cols.D;
-    sk += `<div class="skillItem"><label><span>${t}</span><span style="color:${co}">${v.c}/${v.n}</span></label>
+    const flag = tp < 60 ? ' ⚠️' : tp >= 85 ? ' ✅' : '';
+    sk += `<div class="skillItem"><label><span>${t}${flag}</span><span style="color:${co}">${v.c}/${v.n} (${tp}%)</span></label>
       <div class="skillBar"><div class="skillFill" style="width:${tp}%;background:${co}"></div></div></div>`;
   });
   sk += '</div>';
   document.getElementById('rSkills').innerHTML = sk;
 
+  // ── Insights ──
   const weak = Object.entries(entry.topics).filter(([,v])=>v.c/v.n<0.6).map(([k])=>k);
   const strong = Object.entries(entry.topics).filter(([,v])=>v.c/v.n>=0.85).map(([k])=>k);
   const examTip = S.cfg.type === 'naplan'
-    ? `NAPLAN warmup score ${entry.pct}% → ${entry.pct>=70?'On track for Year 3 NAPLAN 🎉':'Build these skills before Year 3 NAPLAN.'}`
+    ? `NAPLAN warm-up score ${entry.pct}% → ${entry.pct>=70?'On track for Year 3 NAPLAN 🎉':'Build these skills before Year 3 NAPLAN.'}`
     : `ICAS result ${entry.pct}% → ${entry.pct>=85?'Distinction territory! 🏆':entry.pct>=65?'Credit/Distinction range – keep pushing!':'Good start – consistent practice will lift this score.'}`;
 
   document.getElementById('rInsights').innerHTML = `
     <h3 style="margin-bottom:12px">💡 Personalised Insights</h3>
-    ${strong.length ? `<div class="insight"><h4>🌟 Strengths</h4><p>${strong.join(' · ')}</p></div>` : ''}
-    ${weak.length ? `<div class="insight warn"><h4>📌 Focus Areas</h4><p>${weak.join(' · ')}</p><p style="margin-top:4px">Tip: Switch to <strong>Practice mode</strong> and do a targeted test on these topics to see hints and explanations.</p></div>` : ''}
+    ${strong.length ? `<div class="insight"><h4>🌟 Strong Topics This Test</h4><p>${strong.join(' · ')}</p></div>` : ''}
+    ${weak.length ? `<div class="insight warn">
+      <h4>📌 Needs Practice</h4>
+      <p><strong>${weak.join(', ')}</strong></p>
+      <p style="margin-top:4px">👇 Scroll down to see each wrong answer explained so Mevil understands why.</p>
+      <p style="margin-top:4px">📊 These topics are saved to the <strong>Focus Areas</strong> dashboard so you can track improvement over time.</p>
+    </div>` : '<div class="insight"><h4>🏆 No weak areas this test!</h4><p>Mevil scored above 60% in every topic. Excellent work!</p></div>'}
     <div class="insight tip"><h4>🎯 ${S.cfg.type==='icas'?'ICAS':'NAPLAN'} Readiness</h4><p>${examTip}</p></div>
-    <div class="insight tip"><h4>📅 Study Plan</h4><p>Aim for <strong>1 test per day</strong>, 15–20 minutes. Your question bank rotates automatically — every test feels different until all ${getBank(S.subjectKey).length} questions have been seen.</p></div>`;
+    <div class="insight tip"><h4>📅 Study Plan</h4><p>Aim for <strong>1 test per day</strong>, 15–20 minutes. Question bank rotates automatically — ${getBank(S.subjectKey).length} unique questions before any repeat.</p></div>`;
+
+  // ── Wrong answer review ──
+  const wrongOnes = qs.map((q,i) => ({q, i, userAns: S.answers[i], correct: S.answers[i] === q.a}))
+    .filter(x => !x.correct);
+
+  let rev = `<h3 style="margin-bottom:6px">🔍 Review Wrong Answers</h3>`;
+  if (!wrongOnes.length) {
+    rev += `<div class="insight" style="margin-top:10px"><h4>🏆 Nothing to review!</h4><p>Mevil answered every question correctly. Amazing!</p></div>`;
+  } else {
+    rev += `<p style="color:var(--muted);font-size:.83rem;margin-bottom:14px">${wrongOnes.length} question${wrongOnes.length>1?'s':''} wrong — read each explanation so Mevil understands the correct answer before the next test.</p>`;
+    wrongOnes.forEach(({q, i, userAns}) => {
+      const passageSnip = q.p ? `<div class="rev-passage">📖 <em>${q.p.substring(0,180)}${q.p.length>180?'…':''}</em></div>` : '';
+      const userBlock = userAns !== null
+        ? `<div class="rev-wrong">❌ <strong>Mevil answered:</strong> ${LTRS[userAns]}. ${q.o[userAns]}</div>`
+        : `<div class="rev-skip">⚠️ <strong>Mevil skipped this question</strong> — no answer was selected.</div>`;
+      rev += `<div class="revItem">
+        <div class="rev-topic">Q${i+1} ${q.t ? '· '+q.t : ''}</div>
+        ${passageSnip}
+        <div class="rev-q">${q.q}</div>
+        ${userBlock}
+        <div class="rev-right">✅ <strong>Correct answer:</strong> ${LTRS[q.a]}. ${q.o[q.a]}</div>
+        ${q.e ? `<div class="rev-why">💡 <strong>Why?</strong> ${q.e}</div>` : ''}
+      </div>`;
+    });
+  }
+  document.getElementById('rReview').innerHTML = rev;
 }
 
 function retakeTest() { openConfig(S.subjectKey); }
+
+// ═══════════════════════════════
+//  TOPIC STATS (cumulative across sessions)
+// ═══════════════════════════════
+function updateTopicStats(topicsFromTest, date) {
+  const ts = S.topicStats;
+  Object.entries(topicsFromTest).forEach(([topic, v]) => {
+    if (!ts[topic]) ts[topic] = { c:0, n:0, sessions:[] };
+    ts[topic].c += v.c;
+    ts[topic].n += v.n;
+    ts[topic].sessions.push({ date, pct: Math.round((v.c/v.n)*100) });
+    if (ts[topic].sessions.length > 20) ts[topic].sessions.shift();
+  });
+  S.topicStats = ts;
+  localStorage.setItem('mv_topicStats', JSON.stringify(ts));
+}
+
+function topicTrend(sessions) {
+  if (sessions.length < 2) return 'flat';
+  const recent = sessions.slice(-3).map(s => s.pct);
+  const older  = sessions.slice(-6, -3).map(s => s.pct);
+  if (!older.length) return 'flat';
+  const rAvg = recent.reduce((a,b)=>a+b,0)/recent.length;
+  const oAvg = older.reduce((a,b)=>a+b,0)/older.length;
+  if (rAvg - oAvg >= 10) return 'up';
+  if (oAvg - rAvg >= 10) return 'down';
+  return 'flat';
+}
 
 // ═══════════════════════════════
 //  DASHBOARD
@@ -667,6 +752,7 @@ function renderDash() {
   renderDashOverview();
   renderDashHistory();
   renderDashInsights();
+  renderDashFocus();
 }
 
 function calcStreak() {
@@ -740,7 +826,84 @@ function renderDashInsights() {
 function switchTab(id, el) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
-  ['tOverview','tHistory','tInsights'].forEach(t => document.getElementById(t).style.display=t===id?'block':'none');
+  ['tOverview','tHistory','tInsights','tFocus'].forEach(t => document.getElementById(t).style.display=t===id?'block':'none');
+}
+
+// ═══════════════════════════════
+//  FOCUS AREAS TAB (parent view)
+// ═══════════════════════════════
+function renderDashFocus() {
+  const ts = S.topicStats;
+  const el = document.getElementById('tFocus');
+  if (!Object.keys(ts).length) {
+    el.innerHTML = `<div class="insight"><h4>No data yet</h4><p>Complete at least one test to see Mevil's focus areas here.</p></div>`; return;
+  }
+
+  const allTopics = Object.entries(ts).map(([name, v]) => {
+    const pct = Math.round((v.c / v.n) * 100);
+    const trend = topicTrend(v.sessions);
+    const trendIcon = trend==='up' ? '📈' : trend==='down' ? '📉' : '➡️';
+    const trendLabel = trend==='up' ? 'Improving' : trend==='down' ? 'Declining' : 'Steady';
+    const trendCls = trend==='up' ? 'trendUp' : trend==='down' ? 'trendDn' : 'trendFlat';
+    return { name, pct, trend, trendIcon, trendLabel, trendCls, sessions: v.sessions, total: v.n };
+  }).sort((a,b) => a.pct - b.pct);
+
+  const weak   = allTopics.filter(t => t.pct < 60);
+  const medium = allTopics.filter(t => t.pct >= 60 && t.pct < 80);
+  const strong = allTopics.filter(t => t.pct >= 80);
+
+  let html = `
+    <div class="insight tip" style="margin-bottom:16px">
+      <h4>📌 How to use Focus Areas</h4>
+      <p>This page shows Mevil's performance across <strong>all topics across all tests</strong>.
+      Use the <strong>Needs Work</strong> list to decide what to teach or revise.
+      After Mevil practises, re-run a test and check if the trend arrow changes to 📈.</p>
+    </div>`;
+
+  if (weak.length) {
+    html += `<h3 style="color:var(--red);margin-bottom:10px">🔴 Needs Work (below 60%)</h3>`;
+    weak.forEach(t => {
+      html += `<div class="focusCard">
+        <h4>${t.name} — ${t.pct}% <span class="${t.trendCls}">${t.trendIcon} ${t.trendLabel}</span></h4>
+        <p>Mevil has answered <strong>${t.total} questions</strong> in this topic.
+        ${t.trend==='up' ? '✅ Scores are improving — keep practising!' :
+          t.trend==='down' ? '⚠️ Scores are dropping — needs extra attention.' :
+          'Score is not yet improving. Try teaching this topic then doing a Practice mode test.'}</p>
+        <div class="trend-row">${t.sessions.slice(-5).map(s=>`<span class="tpill">${s.date}: ${s.pct}%</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+
+  if (medium.length) {
+    html += `<h3 style="color:var(--orange);margin:16px 0 10px">🟡 Building (60–79%)</h3>`;
+    medium.forEach(t => {
+      html += `<div class="focusCard" style="border-left-color:var(--orange)">
+        <h4>${t.name} — ${t.pct}% <span class="${t.trendCls}">${t.trendIcon} ${t.trendLabel}</span></h4>
+        <p>Getting there! A bit more practice on <strong>${t.name}</strong> will push this into the strong zone.</p>
+        <div class="trend-row">${t.sessions.slice(-5).map(s=>`<span class="tpill">${s.date}: ${s.pct}%</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+
+  if (strong.length) {
+    html += `<h3 style="color:var(--green);margin:16px 0 10px">🟢 Strong (80%+)</h3>`;
+    html += `<div class="focusCard ok"><h4>Well done on these topics!</h4>
+      <div class="trend-row">${strong.map(t=>`<span class="tpill">${t.name} ${t.pct}% ${t.trendIcon}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  // Tonight's recommendation
+  if (weak.length) {
+    const tonight = weak[0]; // worst topic
+    html += `<div class="insight warn" style="margin-top:16px">
+      <h4>🌙 Study Suggestion for Tonight</h4>
+      <p>Focus on <strong>${tonight.name}</strong> (currently ${tonight.pct}%).
+      Teach Mevil this topic, then open the app → select <strong>Practice mode</strong> → do a test.
+      Practice mode shows explanations after each answer so Mevil learns as he goes.</p>
+    </div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 // Init
