@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mevil's Science Adventure 🔬</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #4a2000 0%, #7b3800 50%, #a04800 100%); min-height: 100vh; color: #333; }
+.header { background: linear-gradient(135deg, #f7971e, #ffd200); padding: 24px 20px 16px; text-align: center; color: #3d1f00; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.header h1 { font-size: 2em; margin-bottom: 6px; }
+.header p { opacity: 0.85; font-size: 1.05em; }
+.progress-wrap { background: rgba(0,0,0,0.15); border-radius: 20px; height: 22px; margin: 14px 20px 6px; overflow: hidden; }
+.progress-bar { background: linear-gradient(90deg, #fff, #ffe082); height: 100%; border-radius: 20px; transition: width 0.6s ease; display: flex; align-items: center; justify-content: center; color: #5d3000; font-size: 12px; font-weight: bold; min-width: 36px; }
+.prog-text { font-size: 0.85em; opacity: 0.75; margin-bottom: 4px; }
+.main { max-width: 820px; margin: 20px auto; padding: 0 14px 40px; }
+.tip-box { background: linear-gradient(135deg, #fff9c4, #ffe082); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; font-size: 0.97em; line-height: 1.6; }
+.ask-dad-banner { background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: none; }
+.ask-dad-banner.show { display: block; }
+.topic-card { background: white; border-radius: 16px; margin-bottom: 14px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.12); }
+.topic-card.locked { opacity: 0.55; }
+.topic-header { padding: 17px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: background 0.15s; }
+.topic-header:hover { background: #fff8f0; }
+.topic-header.no-click { cursor: default; }
+.topic-header.no-click:hover { background: white; }
+.topic-title { display: flex; align-items: center; gap: 12px; font-size: 1.15em; font-weight: 700; }
+.badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.78em; font-weight: bold; }
+.badge-locked { background: #e9ecef; color: #6c757d; }
+.badge-ready { background: #fff3cd; color: #7d4e00; }
+.badge-done { background: #d4edda; color: #155724; }
+.topic-body { display: none; border-top: 2px solid #f0f0f0; }
+.topic-body.open { display: block; }
+.lesson { padding: 20px; background: #fffdf5; }
+.lesson h3 { color: #d07000; margin-bottom: 14px; font-size: 1.15em; }
+.lesson p { line-height: 1.75; margin-bottom: 10px; }
+.eg-box { background: white; border-left: 4px solid #f7971e; padding: 14px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; line-height: 1.8; }
+.lesson-actions { margin-top: 16px; }
+.quiz-section { padding: 20px; }
+.quiz-section > h3 { margin-bottom: 18px; color: #444; font-size: 1.05em; }
+.q-block { margin-bottom: 22px; }
+.q-text { font-size: 1.07em; font-weight: 600; margin-bottom: 12px; color: #222; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+@media(max-width:500px){ .options { grid-template-columns: 1fr; } }
+.opt { padding: 12px 14px; border: 2px solid #ddd; border-radius: 10px; background: white; cursor: pointer; font-size: 0.97em; transition: all 0.15s; text-align: left; width: 100%; }
+.opt:hover { border-color: #f7971e; background: #fff8f0; }
+.opt.selected { border-color: #f7971e; background: #fff3e0; font-weight: 600; }
+.opt.correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724 !important; }
+.opt.wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24 !important; }
+.explanation { margin-top: 10px; padding: 11px 14px; background: #fff8e1; border-radius: 8px; font-size: 0.93em; color: #7d4e00; display: none; line-height: 1.6; }
+.explanation.show { display: block; }
+.submit-area { text-align: center; margin-top: 18px; }
+.quiz-result { text-align: center; padding: 22px; display: none; border-top: 2px solid #f0f0f0; }
+.quiz-result.show { display: block; }
+.res-emoji { font-size: 3.5em; margin-bottom: 10px; }
+.res-score { font-size: 2em; font-weight: bold; margin-bottom: 8px; }
+.res-msg { font-size: 1.08em; margin-bottom: 18px; color: #555; }
+.btn { padding: 12px 26px; border: none; border-radius: 25px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.2s; margin: 5px; }
+.btn-primary { background: linear-gradient(135deg, #f7971e, #ffd200); color: #3d1f00; box-shadow: 0 4px 14px rgba(247,151,30,0.4); }
+.btn-primary:hover { transform: translateY(-2px); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-dad { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; font-size: 0.88em; padding: 10px 18px; }
+.completion { display: none; text-align: center; padding: 40px 24px; background: white; border-radius: 20px; margin: 20px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.12); }
+.completion.show { display: block; }
+.code-box { background: linear-gradient(135deg, #4a2000, #7b3800); color: #ffd200; padding: 18px 32px; border-radius: 14px; font-size: 2em; font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 4px; margin: 20px auto; display: inline-block; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+.stars-anim { font-size: 3em; animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+@keyframes slideIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+.topic-card { animation: slideIn 0.3s ease; }
+.next-hint { background: #fff8f0; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 0.9em; color: #555; }
+.trick-box { background: linear-gradient(135deg, #fff8e1, #fff3e0); border: 2px dashed #f7971e; border-radius: 12px; padding: 14px 16px; margin: 14px 0; line-height: 1.9; }
+.trick-box h4 { color: #e65100; margin-bottom: 10px; font-size: 1.05em; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 Mevil's Science Adventure</h1>
+  <p>Complete all 4 topics to unlock your Science test! 🚀</p>
+  <div class="progress-wrap"><div class="progress-bar" id="pgBar" style="width:0%">0%</div></div>
+  <p class="prog-text" id="pgText">0 of 4 topics completed</p>
+</div>
+
+<div class="main">
+  <div class="tip-box">
+    💡 <strong>How it works:</strong> Read each lesson, then answer 3 questions. Get <strong>2 out of 3 correct</strong> to unlock the next topic! If you're stuck, press <strong>🙋 Ask Dad</strong>. Science is cool — let's go! 🔬
+  </div>
+
+  <div class="ask-dad-banner" id="askDadBanner">
+    <strong>🙋 Topics to chat about with Dad:</strong>
+    <ul id="askDadList" style="margin-top:8px;padding-left:20px;line-height:1.8;"></ul>
+  </div>
+
+  <div id="topicsContainer"></div>
+
+  <div class="completion" id="completionScreen">
+    <div class="stars-anim">⭐🔬⭐</div>
+    <h2 style="font-size:2em;margin:16px 0;color:#d07000;">SCIENCE SUPERSTAR! 🏆</h2>
+    <p style="font-size:1.15em;color:#555;margin-bottom:8px;">You've finished ALL Science topics!</p>
+    <p style="font-size:1.05em;color:#555;margin-bottom:20px;">Show Dad this secret code to unlock your Science test:</p>
+    <div class="code-box" id="codeDisplay">SCI★----</div>
+    <p style="color:#999;font-size:0.88em;margin-top:8px;">Completed: <span id="completedAt"></span></p>
+    <div class="next-hint">🎉 WOW! You've completed Maths, English AND Science study packs! You're ready to take all your tests! Great work, Mevil!</div>
+  </div>
+</div>
+
+<script>
+const SKEY = 'mevil_science';
+
+const topics = [
+  {
+    id:'animals', title:'🐾 Animals', color:'#48bb78',
+    lesson:`<h3>📚 Let's Learn About Animals!</h3>
+      <p>Animals are living things that move around, eat food, and have babies! 🐾</p>
+      <div class="eg-box">🌟 <strong>What animals eat — 3 groups:</strong><br><br>
+        <strong>Herbivore</strong> — eats ONLY plants 🌿<br>
+        Examples: rabbit, cow, sheep, horse, koala<br><br>
+        <strong>Carnivore</strong> — eats ONLY meat 🥩<br>
+        Examples: lion, shark, eagle, snake<br><br>
+        <strong>Omnivore</strong> — eats BOTH plants AND meat 🥗🥩<br>
+        Examples: humans, bears, dogs, pigs, chickens</div>
+      <div class="eg-box">🐾 <strong>Animal groups (classifications):</strong><br><br>
+        <strong>Mammals</strong> — warm-blooded, have fur/hair, feed babies milk<br>
+        Dog, cat, whale, dolphin, bat, elephant, humans!<br><br>
+        <strong>Birds</strong> — have feathers, lay eggs, most can fly<br>
+        Eagle, penguin, parrot, owl<br><br>
+        <strong>Reptiles</strong> — cold-blooded, have scales, lay eggs<br>
+        Snake, lizard, crocodile, turtle<br><br>
+        <strong>Amphibians</strong> — live in water AND on land<br>
+        Frog, toad, salamander<br><br>
+        <strong>Fish</strong> — live in water, breathe through gills<br>
+        Salmon, shark, goldfish</div>
+      <div class="trick-box"><h4>🧠 Tricks to Remember!</h4>
+        <strong>Trick 1 — HCO Shortcut:</strong><br>
+        🌿 <strong>H</strong>erbivore = <strong>H</strong>ay and plants ONLY<br>
+        🥩 <strong>C</strong>arnivore = <strong>C</strong>hops and meat ONLY<br>
+        🍽️ <strong>O</strong>mnivore = <strong>O</strong>melette (can eat BOTH — like us!) 🎯<br><br>
+        <strong>Trick 2 — Mammal Checklist (WFMB):</strong><br>
+        <strong>W</strong>arm-blooded (body stays warm) | <strong>F</strong>ur or hair on body<br>
+        <strong>M</strong>ilk for babies | <strong>B</strong>reathe air (not gills!) 🐬<br>
+        Dolphins ✅ warm-blooded ✅ breathe air ✅ feed milk → MAMMAL (not fish!)<br><br>
+        <strong>Trick 3 — "Lives in water" ≠ Fish!</strong><br>
+        Dolphins, whales, seals → ocean creatures BUT mammals 🌊<br>
+        Frogs → live near water BUT amphibians, not fish!<br><br>
+        <strong>Trick 4 — Quick animal sort:</strong><br>
+        Feathers? → BIRD 🐦 | Scales + cold-blooded? → REPTILE 🦎<br>
+        Fur + warm-blooded? → MAMMAL 🐶 | Gills + fins? → FISH 🐟</div>`,
+    quiz:[
+      {q:"What do HERBIVORES eat?",opts:["Only meat","Only plants","Both plants and meat","Only insects"],ans:1,exp:"Herbivores eat ONLY plants! Think herb = plant. Rabbits, cows and koalas are herbivores. They never eat meat! 🌿"},
+      {q:"Which of these animals is a MAMMAL?",opts:["Eagle","Salmon","Dolphin","Frog"],ans:2,exp:"A dolphin is a mammal! Even though it lives in the ocean, it's warm-blooded, breathes air, and feeds its babies milk — all mammal features! 🐬"},
+      {q:"What do we call an animal that eats BOTH plants and meat?",opts:["Herbivore","Carnivore","Omnivore","Reptile"],ans:2,exp:"An omnivore eats both plants AND meat! Humans are omnivores — we eat vegetables AND meat! Bears are omnivores too! 🐻"}
+    ]
+  },
+  {
+    id:'materials', title:'🧱 Materials', color:'#e53e3e',
+    lesson:`<h3>📚 Let's Learn About Materials!</h3>
+      <p>Materials are what things are <strong>made of</strong>! Different materials have different <strong>properties</strong> (what they're like). 🧱</p>
+      <div class="eg-box">🔍 <strong>Properties of materials:</strong><br><br>
+        <strong>Hard</strong> — doesn't bend or squash easily (rock, metal, wood)<br>
+        <strong>Soft</strong> — squashes or bends easily (cotton, sponge, rubber)<br>
+        <strong>Flexible</strong> — can bend without breaking (rubber, fabric, plastic)<br>
+        <strong>Rigid</strong> — cannot bend (metal rod, wood plank, glass)<br>
+        <strong>Transparent</strong> — you can see through it (glass, clear plastic)<br>
+        <strong>Opaque</strong> — you cannot see through it (wood, metal, brick)<br>
+        <strong>Absorbent</strong> — soaks up liquid (sponge, paper towel, cloth)<br>
+        <strong>Waterproof</strong> — liquid cannot pass through (plastic, rubber, glass)</div>
+      <div class="eg-box">🎯 <strong>Why we choose different materials:</strong><br><br>
+        Window → <strong>glass</strong> (transparent, lets light through)<br>
+        Raincoat → <strong>plastic/rubber</strong> (waterproof)<br>
+        Towel → <strong>cotton</strong> (absorbent, soft)<br>
+        Frying pan → <strong>metal</strong> (conducts heat well, hard)</div>
+      <div class="trick-box"><h4>🧠 Tricks to Remember!</h4>
+        <strong>Trick 1 — "What does it need to DO?" test:</strong><br>
+        Before choosing a material, ask what job it needs to do!<br>
+        Window needs to let light through → needs to be <strong>transparent</strong> → glass! 🪟<br>
+        Raincoat needs to keep rain out → needs to be <strong>waterproof</strong> → plastic! ☔<br>
+        Towel needs to soak up water → needs to be <strong>absorbent</strong> → cotton! 🛁<br><br>
+        <strong>Trick 2 — Property pairs to remember:</strong><br>
+        Transparent ↔ Opaque (you CAN see through / you CANNOT see through)<br>
+        Flexible ↔ Rigid (bends easily / won't bend)<br>
+        Absorbent ↔ Waterproof (soaks up water / repels water) 🔄<br><br>
+        <strong>Trick 3 — "Would you make it from paper?" test:</strong><br>
+        Would you make a raincoat from paper? NO → paper isn't waterproof!<br>
+        Would you make a window from wood? NO → wood isn't transparent!<br>
+        This silly test helps you think about the RIGHT properties! 😄</div>`,
+    quiz:[
+      {q:"Which material is BEST for making a window?",opts:["Wood","Glass","Metal","Fabric"],ans:1,exp:"Glass is best for windows because it's TRANSPARENT — light can pass through so you can see outside! Wood and metal are opaque (you can't see through them). 🪟"},
+      {q:"A sponge is best described as...",opts:["Hard and shiny","Soft and absorbent","Transparent and smooth","Rough and rigid"],ans:1,exp:"A sponge is soft and absorbent — it squashes easily AND soaks up water! That's why we use sponges to clean and wash things! 🧽"},
+      {q:"Which material conducts HEAT well (gets hot quickly)?",opts:["Plastic","Rubber","Metal","Wood"],ans:2,exp:"Metal conducts heat well! That's why metal pots and pans get hot when you cook. Plastic and rubber are poor conductors — that's why pot handles are often plastic! 🍳"}
+    ]
+  },
+  {
+    id:'forces', title:'💪 Forces', color:'#4776E6',
+    lesson:`<h3>📚 Let's Learn About Forces!</h3>
+      <p>A force is a <strong>push or a pull</strong> that can make things move, stop, or change direction! 💪</p>
+      <div class="eg-box">🌟 <strong>Types of forces:</strong><br><br>
+        <strong>Push</strong> — you push something AWAY from you<br>
+        Examples: pushing a shopping trolley, closing a door, kicking a ball 🦵<br><br>
+        <strong>Pull</strong> — you pull something TOWARD you<br>
+        Examples: opening a door, pulling a rope, reeling in a fishing line 🎣<br><br>
+        <strong>Gravity</strong> — pulls EVERYTHING down toward the ground<br>
+        It's why things fall when you drop them! 🍎⬇️<br><br>
+        <strong>Friction</strong> — slows things down when two surfaces rub together<br>
+        It's why a ball rolling on grass slows down! ⚽</div>
+      <div class="eg-box">🎯 <strong>Forces in real life:</strong><br><br>
+        You open a drawer → <strong>pull</strong> force<br>
+        You kick a football → <strong>push</strong> force<br>
+        An apple falls from a tree → <strong>gravity</strong><br>
+        A car brakes to stop → <strong>friction</strong> (brakes rubbing)</div>
+      <div class="trick-box"><h4>🧠 Tricks to Remember!</h4>
+        <strong>Trick 1 — PUSH vs PULL simple rule:</strong><br>
+        🏃 PUSH = you move it <strong>AWAY</strong> from you (kick a ball, close a door)<br>
+        🤏 PULL = you move it <strong>TOWARD</strong> you (open a drawer, pull a rope)<br>
+        Not sure? Ask: "Did it go away or come toward me?" 🎯<br><br>
+        <strong>Trick 2 — Gravity always goes DOWN:</strong><br>
+        Drop anything → it falls DOWN (never sideways or up!)<br>
+        🍎 Apple falls from tree → GRAVITY | Water flows downhill → GRAVITY<br>
+        Memory: "Gravity = Ground" (both start with G!) 🌍<br><br>
+        <strong>Trick 3 — Friction = Slowing Down:</strong><br>
+        Ball rolling on grass slows down → FRICTION (grass rubbing on ball)<br>
+        Sliding on ice is fast → LOW friction! Sliding on carpet is slow → HIGH friction! ⚽<br><br>
+        <strong>Quick Sort:</strong> Thing falls? → Gravity ⬇️ | Thing slows down? → Friction 🛑 | You moved it? → Push or Pull 👋</div>`,
+    quiz:[
+      {q:"When you pull open a drawer, you are using a _____ force.",opts:["Push","Pull","Gravity","Magnetic"],ans:1,exp:"When you open a drawer, you PULL it toward you! A pull force moves things in your direction. Pushing moves things away from you! 🗄️"},
+      {q:"Gravity pulls objects...",opts:["Up","Sideways","Down","In circles"],ans:2,exp:"Gravity always pulls things DOWN toward the ground! That's why dropped objects fall, why water flows downhill, and why we stay on the ground! 🍎"},
+      {q:"Which force SLOWS DOWN a ball rolling on the grass?",opts:["Gravity","Friction","Magnetism","Electricity"],ans:1,exp:"Friction slows the ball down! Friction happens when two surfaces rub together — the ball and the grass create friction, which slows the ball until it stops! ⚽"}
+    ]
+  },
+  {
+    id:'scienceinquiry', title:'🔭 Science Inquiry', color:'#805ad5',
+    lesson:`<h3>📚 Let's Learn About Science Inquiry!</h3>
+      <p>Science inquiry is how scientists <strong>investigate questions</strong> and find out the truth! 🔭</p>
+      <div class="eg-box">🔬 <strong>Steps of a Science Experiment:</strong><br><br>
+        <strong>1. Ask a Question</strong> 🤔<br>
+        "What happens if I put a plant in the dark?"<br><br>
+        <strong>2. Make a Prediction</strong> 🎯<br>
+        "I think the plant will stop growing."<br>
+        (A prediction = your best guess BEFORE you test!)<br><br>
+        <strong>3. Plan and Do the Experiment</strong> 🧪<br>
+        Set up the test, change ONE thing at a time<br><br>
+        <strong>4. Observe and Record Results</strong> 📊<br>
+        Watch what happens and write it down<br><br>
+        <strong>5. Make a Conclusion</strong> 📝<br>
+        "The plant wilted in the dark, so plants need light to grow!"</div>
+      <div class="eg-box">💡 <strong>Important science words:</strong><br><br>
+        <strong>Prediction</strong> — your guess before the experiment<br>
+        <strong>Observation</strong> — what you see, hear, smell, feel<br>
+        <strong>Evidence</strong> — information that proves something<br>
+        <strong>Conclusion</strong> — what the results tell us</div>
+      <div class="trick-box"><h4>🧠 Tricks to Remember!</h4>
+        <strong>Trick 1 — QPECR Steps (say it: "Que-Pecker"!):</strong><br>
+        <strong>Q</strong>uestion → <strong>P</strong>redict → <strong>E</strong>xperiment → <strong>C</strong>heck results → <strong>R</strong>eport conclusion 🔬<br><br>
+        <strong>Trick 2 — Prediction vs Guess:</strong><br>
+        A wild guess: "I think it'll be blue." (no reason)<br>
+        A <strong>prediction</strong>: "I think the plant will die because plants need sunlight." (reason!) 💡<br>
+        Always give a reason for your prediction!<br><br>
+        <strong>Trick 3 — Why Repeat?</strong><br>
+        1 result = might be lucky or wrong 🎲<br>
+        3 results the same = much more likely to be true ✅<br>
+        Real scientists do experiments <strong>many</strong> times before saying "this is the answer!"<br><br>
+        <strong>Trick 4 — Fair Test Rule:</strong><br>
+        Only change <strong>ONE thing</strong> at a time in an experiment!<br>
+        Testing if plants need light? Change the LIGHT only — keep water, pot, and soil the same! 🌱</div>`,
+    quiz:[
+      {q:"What is the FIRST step in a science experiment?",opts:["Record results","Ask a question","Make a conclusion","Change all the variables"],ans:1,exp:"The first step is to ASK A QUESTION! Every experiment starts with a question you want to answer, like 'What happens if...?' or 'Why does...?' 🤔"},
+      {q:"Before doing an experiment, we make a _____ (our best guess).",opts:["Result","Conclusion","Prediction","Report"],ans:2,exp:"We make a PREDICTION before the experiment! A prediction is your best guess about what will happen — it's okay if you're wrong! That's how we learn! 🎯"},
+      {q:"Why do scientists REPEAT their experiments?",opts:["To waste time","To make experiments longer","To check results are correct","To use more equipment"],ans:2,exp:"Scientists repeat experiments to CHECK the results are correct! If it only happens once, it might be a mistake. If it happens multiple times, you can be more confident it's true! ✅"}
+    ]
+  }
+];
+
+let progress = {};
+let askDadList = [];
+
+function load() { try { const d=JSON.parse(localStorage.getItem(SKEY)||'{}'); progress=d.progress||{}; askDadList=d.askDadList||[]; } catch(e){} }
+function save() {
+  const done=topics.every(t=>progress[t.id]&&progress[t.id].passed);
+  const d=new Date(); const dd=String(d.getDate()).padStart(2,'0'); const mm=String(d.getMonth()+1).padStart(2,'0');
+  localStorage.setItem(SKEY, JSON.stringify({progress,askDadList,completed:done,code:done?`SCI★${dd}${mm}`:null,completedAt:done?d.toLocaleString():null}));
+}
+function unlocked(i){return i===0||(progress[topics[i-1].id]&&progress[topics[i-1].id].passed);}
+function updateProgress(){
+  const passed=topics.filter(t=>progress[t.id]&&progress[t.id].passed).length;
+  const pct=Math.round(passed/topics.length*100);
+  const bar=document.getElementById('pgBar'); bar.style.width=pct+'%'; bar.textContent=pct+'%';
+  document.getElementById('pgText').textContent=`${passed} of ${topics.length} topics completed`;
+  if(passed===topics.length) showCompletion();
+}
+function updateAskDad(){
+  const banner=document.getElementById('askDadBanner'); const list=document.getElementById('askDadList');
+  if(askDadList.length){banner.classList.add('show'); list.innerHTML=askDadList.map(t=>`<li>${t}</li>`).join('');}
+}
+function renderAll(){
+  const c=document.getElementById('topicsContainer'); c.innerHTML='';
+  topics.forEach((t,i)=>{
+    const un=unlocked(i); const done=progress[t.id]&&progress[t.id].passed;
+    const icon=done?'✅':(un?'📖':'🔒');
+    const badgeClass=done?'badge-done':(un?'badge-ready':'badge-locked');
+    const badgeText=done?'Completed! ✅':(un?'Ready — click to open':'🔒 Locked');
+    const card=document.createElement('div'); card.className='topic-card'+(un?'':' locked'); card.style.borderLeft=`5px solid ${t.color}`;
+    card.innerHTML=`
+      <div class="topic-header ${un?'':'no-click'}" id="hdr-${t.id}">
+        <div class="topic-title"><span style="font-size:1.3em">${icon}</span><span>${t.title}</span></div>
+        <div style="display:flex;align-items:center;gap:10px;"><span class="badge ${badgeClass}">${badgeText}</span>${un&&!done?`<span style="font-size:1.1em" id="arr-${t.id}">▼</span>`:''}</div>
+      </div>
+      <div class="topic-body" id="body-${t.id}">
+        <div class="lesson">${t.lesson}<div class="lesson-actions"><button class="btn btn-dad" onclick="askDad('${t.title}')">🙋 Ask Dad about this</button></div></div>
+        <div class="quiz-section" id="quiz-${t.id}"><h3>✏️ Quiz Time! Get 2/3 right to pass!</h3><div id="qs-${t.id}"></div><div class="quiz-result" id="qr-${t.id}"></div></div>
+      </div>`;
+    c.appendChild(card);
+    if(un){document.getElementById(`hdr-${t.id}`).onclick=()=>toggleBody(t.id); if(!done) buildQuiz(t);}
+  });
+  updateProgress(); updateAskDad();
+  const first=topics.findIndex((t,i)=>unlocked(i)&&!(progress[t.id]&&progress[t.id].passed));
+  if(first>=0) setTimeout(()=>{document.getElementById(`body-${topics[first].id}`).classList.add('open');},200);
+}
+function toggleBody(id){const b=document.getElementById(`body-${id}`);b.classList.toggle('open');const arr=document.getElementById(`arr-${id}`);if(arr)arr.textContent=b.classList.contains('open')?'▲':'▼';}
+function buildQuiz(t){
+  const ans=new Array(t.quiz.length).fill(null); window['ans_'+t.id]=ans;
+  const qs=document.getElementById(`qs-${t.id}`);
+  qs.innerHTML=t.quiz.map((q,qi)=>`<div class="q-block"><div class="q-text">Q${qi+1}: ${q.q}</div><div class="options">${q.opts.map((o,oi)=>`<button class="opt" onclick="pick('${t.id}',${qi},${oi})">${o}</button>`).join('')}</div></div>`).join('')+
+    `<div class="submit-area"><button class="btn btn-primary" id="sub-${t.id}" onclick="submitQ('${t.id}')" disabled>Answer all questions first...</button></div>`;
+}
+function pick(tid,qi,oi){
+  const ans=window['ans_'+tid]; ans[qi]=oi;
+  document.querySelectorAll(`#qs-${tid} .q-block`)[qi].querySelectorAll('.opt').forEach((b,i)=>b.classList.toggle('selected',i===oi));
+  const sub=document.getElementById(`sub-${tid}`); const allDone=ans.every(a=>a!==null);
+  sub.disabled=!allDone; sub.textContent=allDone?'Submit Answers! ✨':'Answer all questions first...';
+}
+function submitQ(tid){
+  const t=topics.find(x=>x.id===tid); const ans=window['ans_'+tid];
+  const correct=ans.filter((a,i)=>a===t.quiz[i].ans).length; const passed=correct>=2;
+  document.getElementById(`qs-${tid}`).innerHTML=t.quiz.map((q,qi)=>`<div class="q-block"><div class="q-text">Q${qi+1}: ${q.q}</div><div class="options">${q.opts.map((o,oi)=>{let cls=oi===q.ans?'correct':(ans[qi]===oi?'wrong':'');return `<button class="opt ${cls}" disabled>${o}</button>`;}).join('')}</div><div class="explanation show">${ans[qi]===q.ans?'✅':'❌'} ${q.exp}</div></div>`).join('');
+  const qr=document.getElementById(`qr-${tid}`); qr.classList.add('show');
+  if(passed){qr.innerHTML=`<div class="res-emoji">🌟🎉🌟</div><div class="res-score" style="color:#28a745">${correct}/3 Correct!</div><div class="res-msg">Fantastic! You passed <strong>${t.title}</strong>! 🔬🏆</div><button class="btn btn-primary" onclick="markPassed('${tid}')">Next Topic →</button>`;progress[tid]={passed:true,score:correct,date:new Date().toLocaleDateString()};save();}
+  else{qr.innerHTML=`<div class="res-emoji">💪</div><div class="res-score" style="color:#e55">${correct}/3 Correct</div><div class="res-msg">Almost! Need 2/3 to pass. Read the explanations above carefully and try again!</div><button class="btn btn-primary" onclick="retryQ('${tid}')">Try Again 🔄</button><button class="btn btn-dad" onclick="askDad('${t.title}')">🙋 Ask Dad for help</button>`;}
+  qr.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function markPassed(tid){renderAll();}
+function retryQ(tid){const t=topics.find(x=>x.id===tid);window['ans_'+tid]=new Array(t.quiz.length).fill(null);document.getElementById(`qr-${tid}`).classList.remove('show');buildQuiz(t);}
+function askDad(title){if(!askDadList.includes(title)){askDadList.push(title);save();}updateAskDad();alert(`Added "${title}" to your Ask Dad list! 🙋\n\nKeep going — come back after chatting with Dad!`);}
+function showCompletion(){
+  const s=document.getElementById('completionScreen'); s.classList.add('show');
+  const d=new Date(); const dd=String(d.getDate()).padStart(2,'0'); const mm=String(d.getMonth()+1).padStart(2,'0');
+  document.getElementById('codeDisplay').textContent=`SCI★${dd}${mm}`;
+  document.getElementById('completedAt').textContent=d.toLocaleString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  s.scrollIntoView({behavior:'smooth'});
+}
+load(); renderAll();
+</script>
+</body>
+</html>

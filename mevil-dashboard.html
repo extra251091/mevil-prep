@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mevil's Progress Dashboard 📊</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1535; min-height: 100vh; color: #eee; }
+.header { background: linear-gradient(135deg, #1a237e, #283593); padding: 24px 20px; text-align: center; color: white; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.header h1 { font-size: 1.8em; margin-bottom: 4px; }
+.header p { opacity: 0.8; font-size: 0.95em; }
+.main { max-width: 960px; margin: 0 auto; padding: 20px 14px 50px; }
+
+/* Stat cards */
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+@media(max-width:650px){ .stat-row { grid-template-columns: repeat(2,1fr); } }
+.stat-card { background: #1e2a5e; border-radius: 14px; padding: 18px 14px; text-align: center; border: 1px solid #2d3a80; }
+.stat-val { font-size: 2.2em; font-weight: 900; margin-bottom: 4px; }
+.stat-label { font-size: 0.82em; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Section cards */
+.section { background: #1e2a5e; border-radius: 16px; padding: 22px; margin-bottom: 20px; border: 1px solid #2d3a80; }
+.section h2 { font-size: 1.15em; margin-bottom: 16px; color: #90caf9; display: flex; align-items: center; gap: 8px; }
+
+/* Study pack status */
+.pack-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+@media(max-width:600px){ .pack-row { grid-template-columns: 1fr; } }
+.pack-card { background: #151f50; border-radius: 12px; padding: 16px; text-align: center; border: 2px solid #2d3a80; }
+.pack-card.done { border-color: #4caf50; background: #1a3a1a; }
+.pack-card.pending { border-color: #f7971e; background: #3a2800; }
+.pack-name { font-weight: 700; font-size: 1.05em; margin-bottom: 8px; }
+.pack-code { font-family: monospace; font-size: 1.2em; color: #56CCF2; letter-spacing: 2px; margin: 6px 0; }
+.pack-code.empty { color: #555; font-size: 0.9em; }
+.pack-status { font-size: 0.82em; opacity: 0.75; margin-top: 4px; }
+
+/* Form */
+.form-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+@media(max-width:550px){ .form-grid { grid-template-columns: 1fr; } }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.88em; opacity: 0.8; }
+.form-group input { padding: 10px 12px; border-radius: 8px; border: 1px solid #3a4a90; background: #151f50; color: white; font-size: 1em; }
+.form-group input:focus { outline: none; border-color: #90caf9; }
+.topic-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+@media(max-width:550px){ .topic-grid { grid-template-columns: repeat(2,1fr); } }
+.topic-input { display: flex; flex-direction: column; gap: 4px; }
+.topic-input label { font-size: 0.78em; opacity: 0.7; }
+.topic-input input { padding: 8px 10px; border-radius: 6px; border: 1px solid #3a4a90; background: #151f50; color: white; font-size: 0.9em; }
+.btn { padding: 12px 26px; border: none; border-radius: 25px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+.btn-save { background: linear-gradient(135deg, #4776E6, #8E54E9); color: white; box-shadow: 0 4px 14px rgba(71,118,230,0.4); margin-top: 16px; width: 100%; }
+.btn-save:hover { transform: translateY(-2px); }
+.btn-danger { background: #c62828; color: white; font-size: 0.85em; padding: 8px 16px; }
+
+/* History table */
+.history-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+.history-table th { padding: 10px 12px; text-align: left; background: #151f50; color: #90caf9; border-bottom: 2px solid #2d3a80; }
+.history-table td { padding: 10px 12px; border-bottom: 1px solid #2d3a80; }
+.history-table tr:hover td { background: #1a2355; }
+.grade-chip { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.82em; font-weight: bold; }
+.grade-a { background: #1b5e20; color: #a5d6a7; }
+.grade-b { background: #004d40; color: #80cbc4; }
+.grade-c { background: #e65100; color: #ffcc80; }
+.grade-d { background: #b71c1c; color: #ef9a9a; }
+
+/* Chart containers */
+.chart-wrap { position: relative; height: 260px; }
+
+/* Focus areas */
+.focus-list { list-style: none; }
+.focus-list li { padding: 10px 14px; margin-bottom: 8px; border-radius: 10px; font-size: 0.95em; display: flex; align-items: center; gap: 10px; }
+.focus-red { background: #3a0a0a; border-left: 4px solid #ef5350; }
+.focus-orange { background: #2e1a00; border-left: 4px solid #ff9800; }
+.focus-green { background: #0a2a0a; border-left: 4px solid #4caf50; }
+
+/* Day comparison */
+.compare-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+@media(max-width:550px){ .compare-row { grid-template-columns: repeat(2,1fr); } }
+.compare-card { background: #151f50; border-radius: 10px; padding: 14px; text-align: center; }
+.compare-subject { font-size: 0.8em; opacity: 0.7; margin-bottom: 6px; }
+.compare-scores { display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 1.1em; font-weight: bold; }
+.compare-arrow { font-size: 1.2em; }
+.arrow-up { color: #4caf50; }
+.arrow-down { color: #ef5350; }
+.arrow-same { color: #90caf9; }
+.no-data { text-align: center; padding: 30px; opacity: 0.5; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #4caf50; color: white; padding: 14px 20px; border-radius: 12px; font-weight: bold; display: none; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.toast.show { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 Mevil's Progress Dashboard</h1>
+  <p>Parent view — track results, verify study codes, and see what needs work</p>
+</div>
+
+<div class="main">
+
+  <!-- Summary stats -->
+  <div class="stat-row" id="statRow">
+    <div class="stat-card"><div class="stat-val" style="color:#90caf9" id="statTests">—</div><div class="stat-label">Days Tracked</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#81c784" id="statAvg">—</div><div class="stat-label">Latest Avg Score</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#ffb74d" id="statBest">—</div><div class="stat-label">All-Time Best</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#ce93d8" id="statTrend">—</div><div class="stat-label">Trend (7 days)</div></div>
+  </div>
+
+  <!-- Study Pack Status -->
+  <div class="section">
+    <h2>🔑 Study Pack Completion Codes</h2>
+    <p style="font-size:0.88em;opacity:0.7;margin-bottom:14px;">These codes are generated when Mevil completes a study pack. Verify they match before opening the test app.</p>
+    <div class="pack-row" id="packRow">
+      <div class="pack-card" id="pack-maths">
+        <div class="pack-name">🧮 Maths</div>
+        <div class="pack-code empty" id="code-maths">Not completed yet</div>
+        <div class="pack-status" id="status-maths">Pending</div>
+      </div>
+      <div class="pack-card" id="pack-english">
+        <div class="pack-name">📖 English</div>
+        <div class="pack-code empty" id="code-english">Not completed yet</div>
+        <div class="pack-status" id="status-english">Pending</div>
+      </div>
+      <div class="pack-card" id="pack-science">
+        <div class="pack-name">🔬 Science</div>
+        <div class="pack-code empty" id="code-science">Not completed yet</div>
+        <div class="pack-status" id="status-science">Pending</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day comparison -->
+  <div class="section" id="compareSection">
+    <h2>📅 Today vs Yesterday</h2>
+    <div id="compareContent"><div class="no-data">Enter at least 2 days of results to see comparison</div></div>
+  </div>
+
+  <!-- Progress chart -->
+  <div class="section">
+    <h2>📈 Score Trend (Last 10 Days)</h2>
+    <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <!-- Subject breakdown chart -->
+  <div class="section">
+    <h2>📊 Subject Breakdown (Latest)</h2>
+    <div class="chart-wrap"><canvas id="subjectChart"></canvas></div>
+  </div>
+
+  <!-- Focus areas -->
+  <div class="section">
+    <h2>🎯 Focus Areas (Based on Latest Results)</h2>
+    <ul class="focus-list" id="focusList"><li class="focus-orange">Enter today's results below to see focus areas</li></ul>
+  </div>
+
+  <!-- History table -->
+  <div class="section">
+    <h2>📋 Results History (Last 10 Days)</h2>
+    <div style="overflow-x:auto;"><table class="history-table" id="historyTable">
+      <thead><tr><th>Date</th><th>Maths %</th><th>English %</th><th>Science %</th><th>Digital %</th><th>Avg</th><th>Grade</th><th></th></tr></thead>
+      <tbody id="historyBody"><tr><td colspan="8" style="text-align:center;padding:20px;opacity:0.5;">No records yet — add today's results below!</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- Add results form -->
+  <div class="section">
+    <h2>➕ Add Today's Results</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>📅 Date</label><input type="date" id="inputDate"></div>
+      <div class="form-group"><label>🧮 Maths Score %</label><input type="number" id="inputMaths" min="0" max="100" placeholder="e.g. 47"></div>
+      <div class="form-group"><label>📖 English Score %</label><input type="number" id="inputEnglish" min="0" max="100" placeholder="e.g. 46"></div>
+      <div class="form-group"><label>🔬 Science Score %</label><input type="number" id="inputScience" min="0" max="100" placeholder="e.g. 56"></div>
+      <div class="form-group"><label>💻 Digital Tech %</label><input type="number" id="inputDigital" min="0" max="100" placeholder="e.g. 63"></div>
+      <div class="form-group"><label>🏆 Personal Best %</label><input type="number" id="inputBest" min="0" max="100" placeholder="e.g. 63"></div>
+    </div>
+    <details style="margin-top:16px;">
+      <summary style="cursor:pointer;color:#90caf9;font-size:0.9em;margin-bottom:10px;">▶ Add topic-level scores (optional but useful)</summary>
+      <div class="topic-grid" style="margin-top:12px;">
+        <div class="topic-input"><label>Division</label><input type="number" id="t_division" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Fractions</label><input type="number" id="t_fractions" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Addition</label><input type="number" id="t_addition" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Multiplication</label><input type="number" id="t_multiplication" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Geometry</label><input type="number" id="t_geometry" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Problem Solving</label><input type="number" id="t_problemsolving" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Grammar</label><input type="number" id="t_grammar" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Punctuation</label><input type="number" id="t_punctuation" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Nouns</label><input type="number" id="t_nouns" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Sentences</label><input type="number" id="t_sentences" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Adverbs</label><input type="number" id="t_adverbs" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Adjectives</label><input type="number" id="t_adjectives" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Verbs</label><input type="number" id="t_verbs" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Spelling</label><input type="number" id="t_spelling" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Vocabulary</label><input type="number" id="t_vocabulary" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Animals</label><input type="number" id="t_animals" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Materials</label><input type="number" id="t_materials" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Forces</label><input type="number" id="t_forces" min="0" max="100" placeholder="%"></div>
+        <div class="topic-input"><label>Science Inquiry</label><input type="number" id="t_scienceinquiry" min="0" max="100" placeholder="%"></div>
+      </div>
+    </details>
+    <button class="btn btn-save" onclick="saveResult()">💾 Save Today's Results</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✅ Results saved!</div>
+
+<script>
+const DASH_KEY = 'mevil_dashboard';
+let snapshots = [];
+let trendChart = null;
+let subjectChart = null;
+
+// Load data
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DASH_KEY) || '{}');
+    snapshots = d.snapshots || [];
+  } catch(e) {}
+  // Pre-load today's data if no records
+  if (snapshots.length === 0) {
+    // Pre-populate today's known results
+    const today = new Date().toISOString().split('T')[0];
+    snapshots = [{
+      date: today,
+      displayDate: '01/06/2026',
+      maths: 47, english: 46, science: 56, digital: 63,
+      personalBest: 63,
+      avg: Math.round((47+46+56+63)/4),
+      topics: {
+        division:0, fractions:0, addition:0, multiplication:50, geometry:25, problemsolving:0,
+        grammar:0, punctuation:14, nouns:20, sentences:25, adverbs:0, adjectives:33, verbs:40, spelling:43, vocabulary:50,
+        animals:25, materials:40, forces:50, scienceinquiry:25
+      }
+    }];
+    save();
+  }
+}
+
+function save() {
+  if (snapshots.length > 10) snapshots = snapshots.slice(-10);
+  localStorage.setItem(DASH_KEY, JSON.stringify({ snapshots, updatedAt: new Date().toISOString() }));
+}
+
+function getGrade(avg) {
+  if (avg >= 80) return {label:'A', cls:'grade-a'};
+  if (avg >= 65) return {label:'B', cls:'grade-b'};
+  if (avg >= 50) return {label:'C', cls:'grade-c'};
+  return {label:'D', cls:'grade-d'};
+}
+
+function fmt(v) { return v !== undefined && v !== null && v !== '' ? v + '%' : '—'; }
+
+function updateStats() {
+  if (!snapshots.length) return;
+  const latest = snapshots[snapshots.length - 1];
+  document.getElementById('statTests').textContent = snapshots.length;
+  document.getElementById('statAvg').textContent = latest.avg + '%';
+  const allBests = snapshots.map(s => s.personalBest || s.avg).filter(Boolean);
+  document.getElementById('statBest').textContent = Math.max(...allBests) + '%';
+  // Trend
+  if (snapshots.length >= 2) {
+    const prev = snapshots[snapshots.length - 2];
+    const diff = latest.avg - prev.avg;
+    document.getElementById('statTrend').textContent = (diff >= 0 ? '+' : '') + diff + '%';
+    document.getElementById('statTrend').style.color = diff > 0 ? '#81c784' : diff < 0 ? '#ef5350' : '#90caf9';
+  } else {
+    document.getElementById('statTrend').textContent = 'Need 2+ days';
+  }
+}
+
+function updatePackStatus() {
+  const packs = [
+    { key: 'mevil_maths', id: 'maths', label: 'MATH★' },
+    { key: 'mevil_english', id: 'english', label: 'ENG★' },
+    { key: 'mevil_science', id: 'science', label: 'SCI★' }
+  ];
+  packs.forEach(p => {
+    try {
+      const d = JSON.parse(localStorage.getItem(p.key) || '{}');
+      const card = document.getElementById(`pack-${p.id}`);
+      const codeEl = document.getElementById(`code-${p.id}`);
+      const statusEl = document.getElementById(`status-${p.id}`);
+      if (d.completed && d.code) {
+        card.classList.add('done');
+        codeEl.classList.remove('empty');
+        codeEl.textContent = d.code;
+        statusEl.textContent = '✅ Completed — ' + (d.completedAt || '');
+      } else if (d.progress && Object.keys(d.progress).length > 0) {
+        card.classList.add('pending');
+        const passed = Object.values(d.progress).filter(t => t.passed).length;
+        codeEl.textContent = `${passed} topics done`;
+        codeEl.classList.add('empty');
+        statusEl.textContent = '📖 In progress...';
+      }
+    } catch(e) {}
+  });
+}
+
+function updateComparison() {
+  const el = document.getElementById('compareContent');
+  if (snapshots.length < 2) {
+    el.innerHTML = '<div class="no-data">Enter at least 2 days of results to see comparison</div>';
+    return;
+  }
+  const today = snapshots[snapshots.length - 1];
+  const yesterday = snapshots[snapshots.length - 2];
+  const subjects = [
+    { label: '🧮 Maths', key: 'maths' },
+    { label: '📖 English', key: 'english' },
+    { label: '🔬 Science', key: 'science' },
+    { label: '💻 Digital', key: 'digital' }
+  ];
+  el.innerHTML = '<div class="compare-row">' + subjects.map(s => {
+    const t = today[s.key]; const y = yesterday[s.key];
+    if (t == null || y == null) return `<div class="compare-card"><div class="compare-subject">${s.label}</div><div class="compare-scores">—</div></div>`;
+    const diff = t - y;
+    const arrowClass = diff > 0 ? 'arrow-up' : diff < 0 ? 'arrow-down' : 'arrow-same';
+    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+    const diffText = diff !== 0 ? `<span class="${arrowClass}">${arrow}${Math.abs(diff)}%</span>` : `<span class="arrow-same">→ same</span>`;
+    return `<div class="compare-card">
+      <div class="compare-subject">${s.label}</div>
+      <div class="compare-scores"><span style="color:#90caf9">${y}%</span><span style="opacity:0.5;font-size:0.8em;">→</span><span style="color:#fff">${t}%</span></div>
+      <div style="margin-top:6px;font-size:0.9em;">${diffText}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function updateCharts() {
+  const labels = snapshots.map(s => s.displayDate || s.date);
+  const avgData = snapshots.map(s => s.avg);
+  const mathsData = snapshots.map(s => s.maths);
+  const engData = snapshots.map(s => s.english);
+  const sciData = snapshots.map(s => s.science);
+
+  if (trendChart) trendChart.destroy();
+  const ctx1 = document.getElementById('trendChart').getContext('2d');
+  trendChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Average', data: avgData, borderColor: '#90caf9', backgroundColor: 'rgba(144,202,249,0.1)', tension: 0.4, pointRadius: 5, pointHoverRadius: 8, fill: true },
+        { label: 'Maths', data: mathsData, borderColor: '#ef9a9a', backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, borderDash: [5,3] },
+        { label: 'English', data: engData, borderColor: '#a5d6a7', backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, borderDash: [5,3] },
+        { label: 'Science', data: sciData, borderColor: '#ffcc80', backgroundColor: 'transparent', tension: 0.4, pointRadius: 4, borderDash: [5,3] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min: 0, max: 100, ticks: { color: '#aaa', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      },
+      plugins: { legend: { labels: { color: '#ccc' } } }
+    }
+  });
+
+  if (snapshots.length > 0) {
+    const latest = snapshots[snapshots.length - 1];
+    const subLabels = ['Maths', 'English', 'Science', 'Digital'];
+    const subData = [latest.maths, latest.english, latest.science, latest.digital];
+    const subColors = subData.map(v => v >= 80 ? '#4caf50' : v >= 60 ? '#ff9800' : '#ef5350');
+
+    if (subjectChart) subjectChart.destroy();
+    const ctx2 = document.getElementById('subjectChart').getContext('2d');
+    subjectChart = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: subLabels,
+        datasets: [{ label: 'Score %', data: subData, backgroundColor: subColors, borderRadius: 8, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          y: { min: 0, max: 100, ticks: { color: '#aaa', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: '#aaa' }, grid: { display: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.raw + '%' } }
+        }
+      }
+    });
+  }
+}
+
+function updateFocusAreas() {
+  if (!snapshots.length) return;
+  const latest = snapshots[snapshots.length - 1];
+  const topics = latest.topics || {};
+  const list = document.getElementById('focusList');
+
+  const topicEntries = Object.entries(topics).filter(([,v]) => v !== null && v !== undefined);
+  if (!topicEntries.length) {
+    // Use subject scores
+    const items = [
+      { name: 'Maths', score: latest.maths },
+      { name: 'English', score: latest.english },
+      { name: 'Science', score: latest.science },
+      { name: 'Digital Tech', score: latest.digital }
+    ].filter(i => i.score != null).sort((a,b) => a.score - b.score);
+
+    list.innerHTML = items.map(i => {
+      const cls = i.score < 60 ? 'focus-red' : i.score < 80 ? 'focus-orange' : 'focus-green';
+      const icon = i.score < 60 ? '🔴' : i.score < 80 ? '🟡' : '🟢';
+      return `<li class="${cls}">${icon} <strong>${i.name}</strong> — ${i.score}%</li>`;
+    }).join('');
+    return;
+  }
+
+  const sorted = topicEntries.sort((a,b) => a[1] - b[1]);
+  const red = sorted.filter(([,v]) => v < 60).slice(0, 5);
+  const orange = sorted.filter(([,v]) => v >= 60 && v < 80).slice(0, 3);
+  const green = sorted.filter(([,v]) => v >= 80).slice(0, 3);
+
+  const fmt = name => name.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+  list.innerHTML =
+    (red.length ? red.map(([k,v]) => `<li class="focus-red">🔴 <strong>${fmt(k)}</strong> — ${v}% — Needs work!</li>`).join('') : '') +
+    (orange.length ? orange.map(([k,v]) => `<li class="focus-orange">🟡 <strong>${fmt(k)}</strong> — ${v}% — Building</li>`).join('') : '') +
+    (green.length ? green.map(([k,v]) => `<li class="focus-green">🟢 <strong>${fmt(k)}</strong> — ${v}% — Strong!</li>`).join('') : '');
+}
+
+function updateHistory() {
+  const tbody = document.getElementById('historyBody');
+  if (!snapshots.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;opacity:0.5;">No records yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...snapshots].reverse().map((s, idx) => {
+    const g = getGrade(s.avg);
+    return `<tr>
+      <td>${s.displayDate || s.date}</td>
+      <td>${fmt(s.maths)}</td>
+      <td>${fmt(s.english)}</td>
+      <td>${fmt(s.science)}</td>
+      <td>${fmt(s.digital)}</td>
+      <td><strong>${s.avg}%</strong></td>
+      <td><span class="grade-chip ${g.cls}">${g.label}</span></td>
+      <td><button class="btn btn-danger" onclick="deleteRecord(${snapshots.length - 1 - idx})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteRecord(idx) {
+  if (!confirm('Delete this record?')) return;
+  snapshots.splice(idx, 1);
+  save(); refresh();
+}
+
+function saveResult() {
+  const date = document.getElementById('inputDate').value;
+  const maths = parseInt(document.getElementById('inputMaths').value) || null;
+  const english = parseInt(document.getElementById('inputEnglish').value) || null;
+  const science = parseInt(document.getElementById('inputScience').value) || null;
+  const digital = parseInt(document.getElementById('inputDigital').value) || null;
+  const best = parseInt(document.getElementById('inputBest').value) || null;
+
+  if (!date) { alert('Please enter the date!'); return; }
+  const scores = [maths, english, science, digital].filter(v => v !== null);
+  if (!scores.length) { alert('Please enter at least one subject score!'); return; }
+  const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+
+  // Topic scores
+  const topicIds = ['division','fractions','addition','multiplication','geometry','problemsolving','grammar','punctuation','nouns','sentences','adverbs','adjectives','verbs','spelling','vocabulary','animals','materials','forces','scienceinquiry'];
+  const topics = {};
+  topicIds.forEach(id => {
+    const v = parseInt(document.getElementById('t_' + id).value);
+    if (!isNaN(v)) topics[id] = v;
+  });
+
+  const d = new Date(date);
+  const displayDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+
+  // Check if record for this date already exists — update it
+  const existingIdx = snapshots.findIndex(s => s.date === date);
+  const record = { date, displayDate, maths, english, science, digital, personalBest: best, avg, topics };
+  if (existingIdx >= 0) { snapshots[existingIdx] = record; }
+  else { snapshots.push(record); }
+
+  save(); refresh();
+
+  // Show toast
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+
+  // Clear form
+  ['inputMaths','inputEnglish','inputScience','inputDigital','inputBest'].forEach(id => document.getElementById(id).value = '');
+  topicIds.forEach(id => document.getElementById('t_'+id).value = '');
+}
+
+function refresh() {
+  updateStats();
+  updatePackStatus();
+  updateComparison();
+  updateCharts();
+  updateFocusAreas();
+  updateHistory();
+}
+
+// Set today's date in form
+document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+
+load();
+refresh();
+</script>
+</body>
+</html>
